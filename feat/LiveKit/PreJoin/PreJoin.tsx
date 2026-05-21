@@ -225,7 +225,8 @@ export const PreJoin: FC<PreJoinProps> = ({
     >
       <figure className='fixed inset-0'>
         <img
-          src='/img/prejoin-background.png'
+          src='/img/prejoin-background.jpg'
+          width={960}
           className='h-full w-full bg-black object-cover brightness-75'
         />
       </figure>
@@ -303,16 +304,16 @@ export const PreJoin: FC<PreJoinProps> = ({
                     }))
                   }}
                   className={cn(
-                    'inline-flex h-11 w-full items-center justify-between rounded-md px-3 disabled:opacity-40',
+                    'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
                     '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:p-2 [&+*]:shadow-lg',
-                    '[&+*>ul>li:not(:first-child)]:hover:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
+                    '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
                 >
-                  <div className='flex items-center gap-3 text-left'>
+                  <span className='flex items-center gap-2 truncate text-left'>
                     <MicIcon />
-                    <span className='line-clamp-1 w-full'>{activeAudioLabel}</span>
-                  </div>
+                    <span className='block w-full truncate'>{activeAudioLabel}</span>
+                  </span>
                   <Chevron />
                 </MediaDeviceMenu>
               </div>
@@ -336,16 +337,16 @@ export const PreJoin: FC<PreJoinProps> = ({
                     }))
                   }}
                   className={cn(
-                    'inline-flex h-11 w-full items-center justify-between rounded-md px-3 disabled:opacity-40',
+                    'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
                     '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:p-2 [&+*]:shadow-lg',
-                    '[&+*>ul>li:not(:first-child)]:hover:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
+                    '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
                 >
-                  <div className='flex items-center gap-3 text-left'>
+                  <span className='flex items-center gap-2 truncate text-left'>
                     <CameraIcon />
-                    <span className='line-clamp-1 w-full'>{activeVideoLabel}</span>
-                  </div>
+                    <span className='block w-full truncate'>{activeVideoLabel}</span>
+                  </span>
                   <Chevron />
                 </MediaDeviceMenu>
               </div>
@@ -364,7 +365,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   id='username'
                   name='username'
                   type='text'
-                  className='inline-flex h-11 w-full items-center justify-between rounded-md border px-3 text-sm disabled:opacity-40'
+                  className='hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between rounded-md border px-3 text-sm disabled:opacity-40'
                   defaultValue={username}
                   required
                   onChange={(e) => setUsername(e.currentTarget.value.trim())}
@@ -379,7 +380,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   id='password'
                   name='password'
                   type='password'
-                  className='inline-flex h-11 w-full items-center justify-between rounded-md border px-3 disabled:opacity-40'
+                  className='hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between rounded-md border px-3 disabled:opacity-40'
                   required
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete='off'
@@ -389,7 +390,7 @@ export const PreJoin: FC<PreJoinProps> = ({
             )}
             <button
               type='submit'
-              className='bg-primary text-primary-foreground inline-flex h-11 items-center justify-center rounded-md px-4 font-semibold disabled:opacity-40'
+              className='bg-primary text-primary-foreground inline-flex h-11 items-center justify-center rounded-md px-4 font-semibold hover:bg-red-900 disabled:opacity-40'
               onClick={handleSubmit}
               disabled={!isValid || isLoading}
             >
@@ -404,12 +405,15 @@ export const PreJoin: FC<PreJoinProps> = ({
             </button>
             <button
               type='button'
-              className='border-muted-foreground inline-flex h-11 items-center justify-center rounded-md border px-4 font-semibold'
+              className='border-muted-foreground hover:not-disabled:bg-secondary inline-flex h-11 items-center justify-center rounded-md border px-4 font-semibold'
             >
               {cancelLabel}
             </button>
           </form>
         </div>
+        <p className='text-background mt-6 text-center text-sm font-semibold'>
+          Dengan bergabung, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi kami.
+        </p>
       </div>
     </div>
   )

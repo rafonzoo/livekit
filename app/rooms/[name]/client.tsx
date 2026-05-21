@@ -19,8 +19,8 @@ const LIVEKIT_CSS_PATH = '/lib/css/livekit.css'
 
 const LIVEKIT_PREJOIN_DEFAULT = {
   username: '', // Required
-  videoEnabled: false,
-  audioEnabled: false,
+  videoEnabled: true,
+  audioEnabled: true,
 }
 
 interface RoomsDetailProps {
