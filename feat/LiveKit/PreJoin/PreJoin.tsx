@@ -71,7 +71,7 @@ export const PreJoin: FC<PreJoinProps> = ({
     saveVideoInputDeviceId,
     saveVideoInputEnabled,
   } = usePersistentUserChoices({
-    defaults,
+    defaults: { ...defaults, username: isGuest ? '' : (defaults.username ?? '') },
     preventSave: !persistUserChoices,
     preventLoad: !persistUserChoices,
   })
