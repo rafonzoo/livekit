@@ -1,0 +1,144 @@
+import js from '@eslint/js'
+import globals from 'globals'
+import tsParser from '@typescript-eslint/parser'
+import tsPlugin from '@typescript-eslint/eslint-plugin'
+import importPlugin from 'eslint-plugin-import'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
+import reactPlugin from 'eslint-plugin-react'
+import reactHooks from 'eslint-plugin-react-hooks'
+import pluginNext from '@next/eslint-plugin-next'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { preferDefaultAsNamed, preferNamedExportRule } from './rules/index.mjs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+export default [
+  // =======================================================
+  // 1. Ignores
+  // =======================================================
+  {
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'out/**',
+      'build/**',
+      'rules/**',
+      'next-env.d.ts',
+      'eslint.config.{js,ts,mjs}',
+    ],
+  },
+
+  // =======================================================
+  // 2. Base JS Rules
+  // =======================================================
+  js.configs.recommended,
+
+  // =======================================================
+  // 3. React + TypeScript setup
+  // =======================================================
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+        project: [path.resolve(__dirname, './tsconfig.json')],
+        tsconfigRootDir: __dirname,
+      },
+      globals: {
+        React: 'readonly',
+        JSX: 'readonly',
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+      import: importPlugin,
+      react: reactPlugin,
+      'react-hooks': reactHooks,
+      'jsx-a11y': jsxA11y,
+      '@next/next': pluginNext,
+      custom: {
+        rules: {
+          'prefer-default-as-named': preferDefaultAsNamed,
+          'prefer-named-export': preferNamedExportRule,
+        },
+      },
+    },
+    settings: {
+      react: { version: 'detect' },
+      'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx'],
+      },
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+          project: path.resolve(__dirname, './tsconfig.json'),
+        },
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+      },
+    },
+
+    // =======================================================
+    // 4. Rules
+    // =======================================================
+    rules: {
+      ...pluginNext.configs.recommended.rules,
+      ...pluginNext.configs['core-web-vitals'].rules,
+      ...tsPlugin.configs['recommended-type-checked'].rules,
+      ...tsPlugin.configs['stylistic-type-checked'].rules,
+
+      // Custom
+      'custom/prefer-default-as-named': 'error',
+      'custom/prefer-named-export': 'off',
+
+      // Next
+      '@next/next/no-img-element': 'off',
+
+      // Import
+      'import/no-unresolved': 'error',
+      'import/no-duplicates': 'error',
+      'import/consistent-type-specifier-style': ['warn', 'prefer-top-level'],
+      'import/order': [
+        'warn',
+        {
+          groups: ['type', ['builtin', 'external', 'internal', 'sibling']],
+          pathGroups: [
+            { pattern: 'react', group: 'external', position: 'before' },
+            { pattern: 'react-dom', group: 'external', position: 'before' },
+            { pattern: 'next/**', group: 'external', position: 'before' },
+            { pattern: '@radix-ui/**', group: 'external', position: 'before' },
+            { pattern: '@/**', group: 'internal', position: 'after' },
+          ],
+          alphabetize: { order: 'desc', caseInsensitive: true },
+          pathGroupsExcludedImportTypes: ['type'],
+          'newlines-between': 'never',
+        },
+      ],
+
+      // TS Rules
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/consistent-type-imports': [
+        'warn',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
+      ],
+
+      // React
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+
+      // Hooks
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
+    },
+  },
+]
