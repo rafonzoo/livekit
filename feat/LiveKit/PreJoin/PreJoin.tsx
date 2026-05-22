@@ -3,7 +3,6 @@
 import type { FC, MouseEvent } from 'react'
 import type { LocalUserChoices, PreJoinProps as PrejoinPropsBase } from '@livekit/components-react'
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Loader } from 'lucide-react'
 import { facingModeFromLocalTrack, Track } from 'livekit-client'
 import {
   CameraDisabledIcon,
@@ -18,6 +17,7 @@ import { log } from '@livekit/components-core'
 import { cn } from '@/lib/utils'
 import { ToggleTrack } from '@/feat/LiveKit/PreJoin/ToggleTrack'
 import { useProgressiveTracks } from '@/feat/LiveKit/hooks'
+import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
 
 export interface LocalUserChoicesPassword extends LocalUserChoices {
   password: string
@@ -216,7 +216,7 @@ export const PreJoin: FC<PreJoinProps> = ({
   }, [audioTrack, videoTrack])
 
   return (
-    <div
+    <main
       {...wrapperProps}
       className={cn(
         'flex h-full min-h-screen w-full items-center justify-center py-10',
@@ -241,7 +241,7 @@ export const PreJoin: FC<PreJoinProps> = ({
           </header>
           {!!deniedDevices.length && (
             <p className='text-destructive grid grid-cols-[18px_1fr] gap-3 rounded-md bg-red-200 p-4'>
-              <AlertTriangle size={18} />
+              <HugeIcon icon={Alert01FreeIcons} size={18} />
               Error: Tidak dapat menemukan {formattedMedia}, atau pengguna menolak atas izin akses{' '}
               {formattedMedia}. Silahkan muat ulang halaman ini, atau tutup dan kembali ke halaman
               ini untuk mengaktifkan {formattedMedia}.
@@ -265,7 +265,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   <p className='mt-5 text-base font-semibold'>{camOffLabel}</p>
                 </div>
               )}
-              <div className='relative flex gap-1 overflow-hidden rounded-full bg-white'>
+              <div className='bg-background relative flex gap-1 overflow-hidden rounded-full'>
                 <div className='bg-primary/20 absolute inset-0 h-auto! w-auto!' />
                 <ToggleTrack
                   title={audioEnabled ? 'Bisukan mikrofon' : 'Aktifkan mikrofon'}
@@ -305,7 +305,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   }}
                   className={cn(
                     'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
-                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:p-2 [&+*]:shadow-lg',
+                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:border [&+*]:p-2 [&+*]:shadow-lg',
                     '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
@@ -338,7 +338,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   }}
                   className={cn(
                     'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
-                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:p-2 [&+*]:shadow-lg',
+                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:border [&+*]:p-2 [&+*]:shadow-lg',
                     '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
@@ -366,7 +366,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   name='username'
                   type='text'
                   className='hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between rounded-md border px-3 text-sm disabled:opacity-40'
-                  defaultValue={username}
+                  value={username}
                   required
                   onChange={(e) => setUsername(e.currentTarget.value.trim())}
                   autoComplete='off'
@@ -396,7 +396,7 @@ export const PreJoin: FC<PreJoinProps> = ({
             >
               {isLoading ? (
                 <>
-                  <Loader size={20} className='animate-spin' />
+                  <HugeIcon icon={Loading03FreeIcons} size={20} className='animate-spin' />
                   {isLoadingLabel && <span className='ml-2 inline-block'>{isLoadingLabel}</span>}
                 </>
               ) : (
@@ -405,7 +405,7 @@ export const PreJoin: FC<PreJoinProps> = ({
             </button>
             <button
               type='button'
-              className='border-muted-foreground hover:not-disabled:bg-secondary inline-flex h-11 items-center justify-center rounded-md border px-4 font-semibold'
+              className='hover:not-disabled:bg-secondary inline-flex h-11 items-center justify-center rounded-md border px-4 font-semibold shadow'
             >
               {cancelLabel}
             </button>
@@ -415,6 +415,6 @@ export const PreJoin: FC<PreJoinProps> = ({
           Dengan bergabung, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi kami.
         </p>
       </div>
-    </div>
+    </main>
   )
 }

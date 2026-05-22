@@ -29,6 +29,7 @@ interface RoomsDetailProps {
   hq: boolean
   codec: VideoCodec
   singlePeerConnection: boolean
+  isTesting?: boolean
 }
 
 export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
@@ -121,13 +122,13 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
 
   return isReady && isCSSLoaded ? (
     <VideoConference
-      connectionDetails={connectionDetails}
-      userChoices={preJoinChoices}
-      options={{
-        codec: props.codec,
-        hq: props.hq,
-        singlePeerConnection: props.singlePeerConnection,
-      }}
+    // connectionDetails={connectionDetails}
+    // userChoices={preJoinChoices}
+    // options={{
+    //   codec: props.codec,
+    //   hq: props.hq,
+    //   singlePeerConnection: props.singlePeerConnection,
+    // }}
     />
   ) : (
     <PreJoin
@@ -135,7 +136,7 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
       onSubmit={handlePreJoinSubmit.current}
       onError={handlePreJoinError.current}
       isLoading={loading}
-      isGuest
+      isGuest={props.isTesting}
     />
   )
 }

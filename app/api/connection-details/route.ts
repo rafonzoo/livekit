@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Change this for testing
     let interceptor: ConnectionInterceptor | null = null
 
-    interceptor = 'waiting' as never
+    interceptor = (process.env.LIVEKIT_API_INTERCEPTOR ?? null) as never
 
     if (!interceptor || interceptor === ConnectionInterceptor.Waiting) {
       return new NextResponse(JSON.stringify({ ...data, interceptor }), {

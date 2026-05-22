@@ -1,127 +1,101 @@
 'use client'
 
 import type { FC } from 'react'
-import type {
-  RoomOptions,
-  TrackPublishDefaults,
-  VideoCaptureOptions,
-  VideoCodec,
-} from 'livekit-client'
-import type { LocalUserChoices } from '@livekit/components-react'
-import type { ConnectionDetails } from '@/feat/LiveKit/types'
-import { useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { ConnectionState, MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
-import { formatChatMessageLinks, RoomContext } from '@livekit/components-react'
-import { VideoConferenceLive } from '@/feat/LiveKit/Conference/VideoConferenceLive'
+import { useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { ChatIcon } from '@phosphor-icons/react'
+import { cn } from '@/lib/utils'
+import {
+  ConferenceTabs,
+  ConferenceTabsButton,
+  ConferenceTabsChats,
+  ConferenceTabsMeeting,
+  ConferenceTabsParticipant,
+  ConferenceTabsPersonalize,
+  ConferenceTabsSettings,
+} from '@/feat/LiveKit/Conference/Tabs'
+import { ConferencePanel } from '@/feat/LiveKit/Conference/Panel'
+import {
+  HugeIcon,
+  AiMagicFreeIcons,
+  Settings02FreeIcons,
+  ToolsFreeIcons,
+  UserMultiple02FreeIcons,
+} from '@/components/HugeIcon'
 
-interface VideoConferenceProps {
-  userChoices: LocalUserChoices
-  connectionDetails: ConnectionDetails
-  options: {
-    hq: boolean
-    codec: VideoCodec
-    singlePeerConnection: boolean
-  }
-}
+const STATIC_TABS = [
+  {
+    id: 1,
+    title: 'Perangkat rapat',
+    icon: () => <HugeIcon size={22} icon={ToolsFreeIcons} />,
+    content: ConferenceTabsMeeting,
+  },
+  {
+    id: 2,
+    title: 'Daftar peserta',
+    icon: () => <HugeIcon size={22} icon={UserMultiple02FreeIcons} />,
+    content: ConferenceTabsParticipant,
+  },
+  { id: 3, title: 'Percakapan', icon: () => <ChatIcon size={22} />, content: ConferenceTabsChats },
+  {
+    id: 4,
+    title: 'Latar belakang virtual',
+    icon: () => <HugeIcon size={22} icon={AiMagicFreeIcons} />,
+    content: ConferenceTabsPersonalize,
+  },
+  {
+    id: 5,
+    title: 'Alat pengaturan',
+    icon: () => <HugeIcon size={22} icon={Settings02FreeIcons} />,
+    content: ConferenceTabsSettings,
+  },
+]
 
-export const VideoConference: FC<VideoConferenceProps> = (props) => {
-  const propsRef = useRef(props)
-  const params: { name: string } = useParams()
-  const roomOptions = useRef((): RoomOptions => {
-    const { current } = propsRef
-    const videoCodec: VideoCodec | undefined = current.options.codec ?? 'vp9'
-    const videoCaptureDefaults: VideoCaptureOptions = {
-      deviceId: current.userChoices.videoDeviceId ?? undefined,
-      resolution: current.options.hq ? VideoPresets.h2160 : VideoPresets.h720,
-    }
-    const publishDefaults: TrackPublishDefaults = {
-      dtx: false,
-      videoSimulcastLayers: current.options.hq
-        ? [VideoPresets.h1080, VideoPresets.h720]
-        : [VideoPresets.h540, VideoPresets.h216],
-      red: true,
-      videoCodec,
-    }
-
-    return {
-      videoCaptureDefaults: videoCaptureDefaults,
-      publishDefaults: publishDefaults,
-      audioCaptureDefaults: {
-        deviceId: current.userChoices.audioDeviceId ?? undefined,
-      },
-      adaptiveStream: true,
-      dynacast: true,
-      singlePeerConnection: current.options.singlePeerConnection,
-    }
-  })
-
-  const router = useRouter()
-  const room = useRef(new Room(roomOptions.current()))
-  const roomEvent = useRef({
-    leave: () => router.push(`/?from=${params.name}`),
-    error: (err: unknown) => {
-      console.error(err)
-
-      alert(
-        `Encountered an unexpected error, check the console logs for details: ${(err as Error).message}`
-      )
-    },
-  })
+export const VideoConference: FC = () => {
+  const searchParams = useSearchParams()
+  const currentTab = STATIC_TABS.find((tab) => Number(searchParams.get('tab')) === tab.id)
+  const ConferencePanelContent = currentTab?.content ?? (() => null)
 
   useEffect(() => {
-    const { serverUrl, participantToken } = propsRef.current.connectionDetails
-    const { localParticipant } = room.current
-    const { leave, error } = roomEvent.current
-    const currentRoom = room.current
-
-    currentRoom.on(RoomEvent.Disconnected, leave)
-    currentRoom.on(RoomEvent.MediaDevicesError, error)
-
-    currentRoom.on(RoomEvent.MediaDevicesError, (error) => {
-      console.log(error)
-      const failure = MediaDeviceFailure.getFailure(error)
-
-      if (failure === MediaDeviceFailure.PermissionDenied) {
-        console.log('User disallowed access to the capturing device.')
-      } else if (failure === MediaDeviceFailure.NotFound) {
-        console.log('The requested device is unavailable.')
-      }
-    })
-
-    currentRoom.connect(serverUrl, participantToken, { autoSubscribe: true }).catch(error)
-
-    if (propsRef.current.userChoices.videoEnabled) {
-      localParticipant.setCameraEnabled(true).catch(error)
+    function showLeaveAlert(e: Event) {
+      e.preventDefault()
     }
 
-    if (propsRef.current.userChoices.audioEnabled) {
-      localParticipant.setMicrophoneEnabled(true).catch(error)
-    }
+    window.addEventListener('beforeunload', showLeaveAlert)
 
     return () => {
-      currentRoom.off(RoomEvent.Disconnected, leave)
-      currentRoom.off(RoomEvent.MediaDevicesError, error)
-
-      if (currentRoom.state === ConnectionState.Connected) {
-        currentRoom.disconnect()
-      }
+      window.removeEventListener('beforeunload', showLeaveAlert)
     }
   }, [])
 
   return (
-    <div data-lk-theme='default' className='fixed inset-0'>
-      <div className='lk-room-container'>
-        <RoomContext.Provider value={room.current}>
-          {/* <KeyboardShortcuts /> */}
-          <VideoConferenceLive
-            chatMessageFormatter={formatChatMessageLinks}
-            // SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
-          />
-          {/* <DebugMode />
-        <RecordingIndicator /> */}
-        </RoomContext.Provider>
+    <main className='bg-secondary/40 fixed inset-0 p-3'>
+      <div className='flex h-full flex-col gap-3'>
+        <div
+          className={cn(
+            '*:bg-background relative grid grow grid-cols-1 gap-3',
+            !!currentTab && 'lg:grid-cols-[1fr_25rem]'
+          )}
+        >
+          <div className='flex items-center justify-center rounded-md border shadow'>
+            <p>GRID</p>
+          </div>
+          <ConferencePanel tabs={STATIC_TABS.filter(({ id, title }) => ({ id, title }))}>
+            <ConferencePanelContent />
+          </ConferencePanel>
+        </div>
+        <div className='bg-background flex items-center justify-between rounded-md border px-5 py-6 shadow'>
+          <p>left</p>
+          <p>center</p>
+          <ConferenceTabs>
+            {STATIC_TABS.map(({ id, icon: Icon }) => (
+              <ConferenceTabsButton key={id} tab={id}>
+                <Icon />
+              </ConferenceTabsButton>
+            ))}
+          </ConferenceTabs>
+        </div>
       </div>
-    </div>
+    </main>
   )
 }

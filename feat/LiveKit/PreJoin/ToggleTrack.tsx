@@ -21,7 +21,7 @@ export const ToggleTrack = ({
         className={cn(
           'relative flex size-10 items-center justify-center rounded-full',
           isActive
-            ? 'bg-background text-primary border-muted-foreground hover:not-disabled:bg-secondary border'
+            ? 'text-primary border-muted-foreground border bg-white hover:not-disabled:bg-zinc-100'
             : 'bg-primary text-primary-foreground hover:not-disabled:bg-red-900',
 
           props.className

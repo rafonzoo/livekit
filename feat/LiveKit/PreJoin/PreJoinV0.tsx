@@ -3,7 +3,6 @@
 import type { FC, MouseEvent } from 'react'
 import type { LocalUserChoices, PreJoinProps as PrejoinPropsBase } from '@livekit/components-react'
 import { useEffect, useRef, useState } from 'react'
-import { Loader } from 'lucide-react'
 import { facingModeFromLocalTrack, Track } from 'livekit-client'
 import {
   CameraDisabledIcon,
@@ -17,6 +16,7 @@ import {
 } from '@livekit/components-react'
 import { log } from '@livekit/components-core'
 import { cn } from '@/lib/utils'
+import { HugeIcon, Loading03FreeIcons } from '@/components/HugeIcon'
 
 interface PreJoinProps extends PrejoinPropsBase {
   camOffLabel?: string
@@ -259,7 +259,7 @@ export const PreJoin: FC<PreJoinProps> = ({
             >
               {isLoading ? (
                 <>
-                  <Loader size={20} className='animate-spin' />
+                  <HugeIcon icon={Loading03FreeIcons} size={20} className='animate-spin' />
                   {isLoadingLabel && <span className='ml-2 inline-block'>{isLoadingLabel}</span>}
                 </>
               ) : (
