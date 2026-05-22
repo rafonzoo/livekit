@@ -123,6 +123,7 @@ export default [
       ],
 
       // TS Rules
+      '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-unsafe-enum-comparison': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/no-misused-promises': 'off',

@@ -1,4 +1,4 @@
-import { isVideoCodec } from '@/feat/LiveKit/helpers'
+import { isVideoCodec } from '@/feat/Meeting/helpers'
 import { RoomsDetailClient } from '@/app/rooms/[name]/client'
 
 interface RoomsDetailPageProps {

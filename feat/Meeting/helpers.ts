@@ -30,3 +30,30 @@ export function getLiveKitURL(projectUrl: string, region: string | null): string
 export function isVideoCodec(codec?: string): codec is VideoCodec {
   return !!codec && videoCodecs.includes(codec as VideoCodec)
 }
+
+export async function unsecuredCopyToClipboard(text: string) {
+  const textArea = document.createElement('textarea')
+  textArea.value = text
+
+  document.body.appendChild(textArea)
+
+  textArea.focus()
+  textArea.select()
+
+  try {
+    document.execCommand('copy')
+  } catch (err) {
+    console.error('Unable to copy to clipboard', err)
+  }
+
+  document.body.removeChild(textArea)
+}
+
+export async function copyHandler(text = '') {
+  try {
+    await navigator.clipboard.writeText(text)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    await unsecuredCopyToClipboard(text)
+  }
+}

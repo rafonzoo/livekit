@@ -2,7 +2,7 @@
 
 import type { FC } from 'react'
 import { XIcon } from '@phosphor-icons/react'
-import { ConnectionInterceptor } from '@/feat/LiveKit/const'
+import { ConnectionInterceptor } from '@/feat/Meeting/const'
 
 interface InterceptorRoomProps {
   interceptor: ConnectionInterceptor

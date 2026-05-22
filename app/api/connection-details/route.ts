@@ -1,11 +1,11 @@
 import type { NextRequest } from 'next/server'
 import type { AccessTokenOptions, VideoGrant } from 'livekit-server-sdk'
-import type { ConnectionDetails } from '@/feat/LiveKit/types'
+import type { ConnectionDetails } from '@/feat/Meeting/types'
 import { NextResponse } from 'next/server'
 import { AccessToken } from 'livekit-server-sdk'
 import { randomString } from '@/lib/utils'
-import { getLiveKitURL } from '@/feat/LiveKit/helpers'
-import { ConnectionInterceptor } from '@/feat/LiveKit/const'
+import { getLiveKitURL } from '@/feat/Meeting/helpers'
+import { ConnectionInterceptor } from '@/feat/Meeting/const'
 
 const API_KEY = process.env.LIVEKIT_API_KEY
 const API_SECRET = process.env.LIVEKIT_API_SECRET

@@ -3,13 +3,13 @@
 import type { FC } from 'react'
 import type { VideoCodec } from 'livekit-client'
 import type { LocalUserChoices } from '@livekit/components-react'
-import type { ConnectionDetails } from '@/feat/LiveKit/types'
-import type { LocalUserChoicesPassword } from '@/feat/LiveKit/PreJoin/PreJoin'
+import type { ConnectionDetails } from '@/feat/Meeting/types'
+import type { LocalUserChoicesPassword } from '@/feat/Meeting/PreJoin/PreJoin'
 import { useEffect, useRef, useState } from 'react'
-import { PreJoin } from '@/feat/LiveKit/PreJoin/PreJoin'
-import { InterceptorRoom } from '@/feat/LiveKit/PreJoin/InterceptorRoom'
-import { ConnectionInterceptor } from '@/feat/LiveKit/const'
-import { VideoConference } from '@/feat/LiveKit/Conference/VideoConference'
+import { PreJoin } from '@/feat/Meeting/PreJoin/PreJoin'
+import { InterceptorRoom } from '@/feat/Meeting/PreJoin/InterceptorRoom'
+import { ConnectionInterceptor } from '@/feat/Meeting/const'
+import { Rooms } from '@/feat/Meeting/Conference/Rooms'
 
 const LIVEKIT_CSS_ENABLE = true
 
@@ -121,7 +121,7 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
   }
 
   return isReady && isCSSLoaded ? (
-    <VideoConference
+    <Rooms
     // connectionDetails={connectionDetails}
     // userChoices={preJoinChoices}
     // options={{

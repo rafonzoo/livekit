@@ -15,8 +15,8 @@ import {
 } from '@livekit/components-react'
 import { log } from '@livekit/components-core'
 import { cn } from '@/lib/utils'
-import { ToggleTrack } from '@/feat/LiveKit/PreJoin/ToggleTrack'
-import { useProgressiveTracks } from '@/feat/LiveKit/hooks'
+import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
+import { useProgressiveTracks } from '@/feat/Meeting/hooks'
 import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
 
 export interface LocalUserChoicesPassword extends LocalUserChoices {
