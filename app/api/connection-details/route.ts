@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { AccessToken } from 'livekit-server-sdk'
 import { randomString } from '@/lib/utils'
 import { getLiveKitURL } from '@/feat/Meeting/helpers'
-import { ConnectionInterceptor } from '@/feat/Meeting/const'
+import { ConnectionInterceptor } from '@/feat/Meeting/enum'
 
 const API_KEY = process.env.LIVEKIT_API_KEY
 const API_SECRET = process.env.LIVEKIT_API_SECRET

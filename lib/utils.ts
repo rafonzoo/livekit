@@ -39,6 +39,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function num(value: unknown) {
+  return isNaN(Number(value)) ? 0 : Number(value)
+}
+
 export function without<T extends object, K extends keyof T>(obj: T, keys: K[]) {
   const clone = { ...obj }
   for (const key of keys) {

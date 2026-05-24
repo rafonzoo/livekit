@@ -1,6 +1,7 @@
 'use client'
 
 import type { FC, MouseEvent } from 'react'
+import type { CreateLocalTracksOptions } from 'livekit-client'
 import type { LocalUserChoices, PreJoinProps as PrejoinPropsBase } from '@livekit/components-react'
 import { useEffect, useRef, useState } from 'react'
 import { facingModeFromLocalTrack, Track } from 'livekit-client'
@@ -16,7 +17,7 @@ import {
 import { log } from '@livekit/components-core'
 import { cn } from '@/lib/utils'
 import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
-import { useProgressiveTracks } from '@/feat/Meeting/hooks'
+import { useProgressiveTracks, useTabEffect } from '@/feat/Meeting/hooks'
 import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
 
 export interface LocalUserChoicesPassword extends LocalUserChoices {
@@ -24,6 +25,7 @@ export interface LocalUserChoicesPassword extends LocalUserChoices {
 }
 
 export interface PreJoinProps extends Omit<PrejoinPropsBase, 'onSubmit' | 'onValidate'> {
+  autoCheck?: boolean
   camOffLabel?: string
   roomTitle?: string
   roomIntro?: string
@@ -45,6 +47,7 @@ export const PreJoin: FC<PreJoinProps> = ({
   onSubmit,
   onError,
   debug: _debug,
+  autoCheck = false,
   isLoading = false,
   isLoadingLabel = 'Menghubungkan...',
   pageTitle = 'MEET',
@@ -88,17 +91,20 @@ export const PreJoin: FC<PreJoinProps> = ({
   const [username, setUsername] = useState(userChoices.username)
   const [password, setPassword] = useState('')
   const [isValid, setIsValid] = useState(false)
-  const [media, setMedia] = useState({
-    audio: audioEnabled ? { deviceId: initialUserChoices.audioDeviceId } : false,
-    video: videoEnabled
-      ? {
-          deviceId: initialUserChoices.videoDeviceId,
-          processor: videoProcessor,
-        }
-      : false,
+
+  // Capture config
+  const audioConfig = { deviceId: initialUserChoices.audioDeviceId }
+  const videoConfig = {
+    deviceId: initialUserChoices.videoDeviceId,
+    processor: videoProcessor,
+  }
+
+  const [media, setMedia] = useState<CreateLocalTracksOptions>({
+    audio: autoCheck ? audioConfig : audioEnabled ? audioConfig : false,
+    video: autoCheck ? videoConfig : videoEnabled ? videoConfig : false,
   })
 
-  const formattedMedia = deniedDevices
+  const formattedLabel = deniedDevices
     .map((media) => media.replace('video', 'kamera').replace('audio', 'mikrofon'))
     .join(' dan ')
 
@@ -115,7 +121,7 @@ export const PreJoin: FC<PreJoinProps> = ({
   const facingMode = !videoTrack ? 'undefined' : facingModeFromLocalTrack(videoTrack)?.facingMode
   const videoEl = useRef(null)
 
-  // With ref because its param already in effect, and `onValidate` might not wrapped in `useCallback`
+  // With ref because its param is already in effect, and `onValidate` might not wrapped in `useCallback`
   const handleValidation = useRef((values: LocalUserChoicesPassword) =>
     (onValidate?.(values) ?? (isGuest && withPassword))
       ? !!values.password && !!values.username.trim()
@@ -194,9 +200,10 @@ export const PreJoin: FC<PreJoinProps> = ({
     }
   }, [videoTrack])
 
-  // Sync media permission and its label
+  // Sync state based on audio track
   useEffect(() => {
     if (audioTrack) {
+      setAudioEnabled((prev) => (!prev ? !!audioTrack : prev))
       setActiveAudioLabel((prev) => audioTrack?.mediaStreamTrack.label ?? prev)
       setDeniedDevices((prev) =>
         !prev.includes(Track.Kind.Audio)
@@ -204,8 +211,12 @@ export const PreJoin: FC<PreJoinProps> = ({
           : prev.filter((previous) => previous !== Track.Kind.Audio)
       )
     }
+  }, [audioTrack])
 
+  // Sync state based on audio track
+  useEffect(() => {
     if (videoTrack) {
+      setVideoEnabled((prev) => (!prev ? !!videoTrack : prev))
       setActiveVideoLabel((prev) => videoTrack?.mediaStreamTrack.label ?? prev)
       setDeniedDevices((prev) =>
         !prev.includes(Track.Kind.Video)
@@ -213,7 +224,10 @@ export const PreJoin: FC<PreJoinProps> = ({
           : prev.filter((previous) => previous !== Track.Kind.Video)
       )
     }
-  }, [audioTrack, videoTrack])
+  }, [videoTrack])
+
+  // Handle redirect invalid tabs
+  useTabEffect()
 
   return (
     <main
@@ -242,9 +256,9 @@ export const PreJoin: FC<PreJoinProps> = ({
           {!!deniedDevices.length && (
             <p className='text-destructive grid grid-cols-[18px_1fr] gap-3 rounded-md bg-red-200 p-4'>
               <HugeIcon icon={Alert01FreeIcons} size={18} />
-              Error: Tidak dapat menemukan {formattedMedia}, atau pengguna menolak atas izin akses{' '}
-              {formattedMedia}. Silahkan muat ulang halaman ini, atau tutup dan kembali ke halaman
-              ini untuk mengaktifkan {formattedMedia}.
+              Error: Tidak dapat menemukan {formattedLabel}, atau pengguna menolak atas izin akses{' '}
+              {formattedLabel}. Silahkan muat ulang halaman ini, atau tutup dan kembali ke halaman
+              ini untuk mengaktifkan {formattedLabel}.
             </p>
           )}
           <div className='bg-secondary relative aspect-video min-h-50 w-full overflow-hidden rounded-md'>

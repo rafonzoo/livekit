@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import type { LocalAudioTrack, LocalVideoTrack } from 'livekit-client'
 
 export interface SessionProps {
@@ -20,4 +21,18 @@ export interface ConnectionDetails {
   roomName: string
   participantName: string
   participantToken: string
+}
+
+export interface TabProps {
+  id: number
+  content: FC
+  metaId: number
+  parentId?: number
+  // icon: FC
+  // title: string
+  // addons: {
+  //   id: number
+  //   parentId: number
+  //   content: FC
+  // }[]
 }

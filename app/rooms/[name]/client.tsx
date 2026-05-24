@@ -6,22 +6,16 @@ import type { LocalUserChoices } from '@livekit/components-react'
 import type { ConnectionDetails } from '@/feat/Meeting/types'
 import type { LocalUserChoicesPassword } from '@/feat/Meeting/PreJoin/PreJoin'
 import { useEffect, useRef, useState } from 'react'
+import { Rooms } from '@/feat/Meeting/Rooms'
 import { PreJoin } from '@/feat/Meeting/PreJoin/PreJoin'
 import { InterceptorRoom } from '@/feat/Meeting/PreJoin/InterceptorRoom'
-import { ConnectionInterceptor } from '@/feat/Meeting/const'
-import { Rooms } from '@/feat/Meeting/Conference/Rooms'
+import { ConnectionInterceptor } from '@/feat/Meeting/enum'
 
 const LIVEKIT_CSS_ENABLE = true
 
 const LIVEKIT_CSS_ID = 'livekit-style'
 
 const LIVEKIT_CSS_PATH = '/lib/css/livekit.css'
-
-const LIVEKIT_PREJOIN_DEFAULT = {
-  username: '', // Required
-  videoEnabled: true,
-  audioEnabled: true,
-}
 
 interface RoomsDetailProps {
   roomName: string
@@ -40,7 +34,7 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
   const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails | undefined>()
 
   // Reference
-  const preJoinDefaults = useRef(LIVEKIT_PREJOIN_DEFAULT)
+  const preJoinDefaults = useRef({ username: '', audioEnabled: false, videoEnabled: false })
   const connectionDetailsRef = useRef<ConnectionDetails | undefined>(undefined)
   const isReady = !!connectionDetails && !!preJoinChoices
   const handlePreJoinError = useRef((e: unknown) => console.error(e))
