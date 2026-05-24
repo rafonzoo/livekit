@@ -1,6 +1,5 @@
 export enum LiveKitConfig {
   TabsPushMethod = 'replace',
-  StorageKeyTab = 'rf-tab',
 }
 
 export enum ConnectionInterceptor {
@@ -10,7 +9,7 @@ export enum ConnectionInterceptor {
   Limit = 'limit',
 }
 
-export enum ConnectionSearch {
+export enum SearchParamsKey {
   Tabs = 'tab',
   TabsState = 'io',
 }

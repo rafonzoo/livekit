@@ -2,19 +2,19 @@
 
 import type { ComponentProps, FC } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { HandIcon, MonitorPlayIcon, PhoneSlashIcon, SmileyIcon } from '@phosphor-icons/react'
 import { MicDisabledIcon, CameraDisabledIcon } from '@livekit/components-react'
-import { ChevronUp } from '@hugeicons/core-free-icons'
 import { cn, num } from '@/lib/utils'
 import { RoomsTabPanel } from '@/feat/Meeting/Rooms/TabPanel'
-import { ConnectionSearch } from '@/feat/Meeting/enum'
+import { SearchParamsKey } from '@/feat/Meeting/enum'
 import { RoomTabs } from '@/feat/Meeting/const'
-import { HugeIcon } from '@/components/HugeIcon'
+import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { ButtonIcon } from '@/components/Button'
 
 export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, ...props }) => {
   const searchParams = useSearchParams()
-  const tab = num(searchParams.get(ConnectionSearch.Tabs))
-  const isOpen = num(searchParams.get(ConnectionSearch.TabsState))
+  const tab = num(searchParams.get(SearchParamsKey.Tabs))
+  const isOpen = num(searchParams.get(SearchParamsKey.TabsState))
   const currentTab = RoomTabs.find(({ id }) => tab === id)
   const RoomsPanelContent = currentTab?.content ?? (() => null)
 
@@ -30,24 +30,34 @@ export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, 
           <div className='flex items-center justify-center rounded-md border shadow'>
             <p>GRID</p>
           </div>
-          <RoomsTabPanel className='xl:static'>
+          <RoomsTabPanel className='xl:bottom-34'>
             <RoomsPanelContent />
           </RoomsTabPanel>
         </div>
-        <div className='bg-background flex items-center justify-center gap-4 rounded-md border px-1 py-2 shadow xl:min-h-28 xl:px-5 xl:py-6'>
+        <div className='bg-background flex items-center justify-center gap-2 rounded-md border px-1 py-2 shadow *:not-[div]:size-10 md:*:not-[div]:size-12 xl:min-h-28 xl:gap-4 xl:px-5 xl:py-6'>
           <ButtonIcon>
-            <MicDisabledIcon />
+            <MicDisabledIcon className='md:scale-[1.2]' />
           </ButtonIcon>
-          <div className='dark:bg-primary/50 flex items-center gap-1 rounded-full bg-red-200'>
-            <div className='p-1'>
-              <ButtonIcon className='size-10'>
-                <CameraDisabledIcon />
-              </ButtonIcon>
-            </div>
-            <button className='dark:hover:bg-primary/50 relative mr-2 -ml-1 inline-flex size-10 items-center justify-center rounded-full hover:bg-red-300'>
+          <div className='dark:bg-primary/50 flex h-10 items-center gap-1 rounded-full bg-red-200 p-1 *:size-8 md:h-12 md:*:size-10'>
+            <ButtonIcon>
+              <CameraDisabledIcon />
+            </ButtonIcon>
+            <button className='dark:hover:bg-primary/50 relative inline-flex items-center justify-center rounded-full hover:bg-red-300'>
               <HugeIcon icon={ChevronUp} strokeWidth={2} />
             </button>
           </div>
+          <ButtonIcon isActive>
+            <HandIcon weight='fill' size={20} />
+          </ButtonIcon>
+          <ButtonIcon isActive>
+            <MonitorPlayIcon weight='fill' size={22} />
+          </ButtonIcon>
+          <ButtonIcon isActive>
+            <SmileyIcon weight='fill' size={24} />
+          </ButtonIcon>
+          <ButtonIcon>
+            <PhoneSlashIcon weight='fill' size={20} />
+          </ButtonIcon>
         </div>
 
         {children}

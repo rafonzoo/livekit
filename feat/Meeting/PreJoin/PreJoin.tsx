@@ -248,7 +248,7 @@ export const PreJoin: FC<PreJoinProps> = ({
         <h2 className='mb-6 text-center text-[48px] leading-12 font-semibold text-white'>
           {pageTitle}
         </h2>
-        <div className='bg-background flex flex-col gap-4 rounded-md p-8 text-sm'>
+        <div className='bg-background flex flex-col gap-4 rounded-md p-4 pt-8 text-sm md:p-8'>
           <header className='text-center'>
             <p className='text-primary text-2xl font-semibold'>{roomIntro}</p>
             <p className='mt-2'>{roomTitle}</p>
@@ -298,7 +298,7 @@ export const PreJoin: FC<PreJoinProps> = ({
               </div>
             </div>
           </div>
-          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <div className='flex flex-col gap-2'>
               <p>Mikrofon</p>
               <div id='list-audio' className='h-11 rounded-md border'>

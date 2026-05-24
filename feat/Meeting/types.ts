@@ -26,13 +26,7 @@ export interface ConnectionDetails {
 export interface TabProps {
   id: number
   content: FC
-  metaId: number
+  hide: boolean
   parentId?: number
-  // icon: FC
-  // title: string
-  // addons: {
-  //   id: number
-  //   parentId: number
-  //   content: FC
-  // }[]
+  description?: string
 }

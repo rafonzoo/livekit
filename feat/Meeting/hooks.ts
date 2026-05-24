@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Mutex, Track, createLocalTracks } from 'livekit-client'
 import { log } from '@livekit/components-core'
 import { num, omit, qstring } from '@/lib/utils'
-import { ConnectionSearch, LiveKitConfig } from '@/feat/Meeting/enum'
+import { SearchParamsKey, LiveKitConfig } from '@/feat/Meeting/enum'
 import { RoomTabs } from '@/feat/Meeting/const'
 
 export function useProgressiveTracks(
@@ -69,7 +69,7 @@ export function useTabEffect() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const tab = num(searchParams.get(ConnectionSearch.Tabs))
+  const tab = num(searchParams.get(SearchParamsKey.Tabs))
 
   const redirectInvalidTab = useEffectEvent((tabId: number) => {
     if (!RoomTabs.find((tabs) => tabs.id === tabId)) {
@@ -77,8 +77,8 @@ export function useTabEffect() {
         qstring(
           pathname,
           omit({ ...Object.fromEntries(searchParams) }, [
-            ConnectionSearch.Tabs,
-            ConnectionSearch.TabsState,
+            SearchParamsKey.Tabs,
+            SearchParamsKey.TabsState,
           ])
         )
       )

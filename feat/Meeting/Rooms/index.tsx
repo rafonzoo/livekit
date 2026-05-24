@@ -1,14 +1,14 @@
 'use client'
 
 import type { FC, MouseEvent } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { Activity, useEffect, useRef, useState } from 'react'
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ChatIcon, CopyIcon } from '@phosphor-icons/react'
 import { cn, num, qstring } from '@/lib/utils'
 import { TabsButton } from '@/feat/Meeting/Tabs'
 import { RoomsLiveKit } from '@/feat/Meeting/Rooms/LiveKit'
 import { copyHandler } from '@/feat/Meeting/helpers'
-import { ConnectionSearch, LiveKitConfig } from '@/feat/Meeting/enum'
+import { SearchParamsKey, LiveKitConfig } from '@/feat/Meeting/enum'
 import { RoomTabsCopy, RoomTabs } from '@/feat/Meeting/const'
 import {
   HugeIcon,
@@ -25,8 +25,8 @@ export const Rooms: FC = () => {
   const pathname = usePathname()
   const params = useParams<{ name: string }>()
   const searchParams = useSearchParams()
-  const tab = num(searchParams.get(ConnectionSearch.Tabs))
-  const isOpen = num(searchParams.get(ConnectionSearch.TabsState))
+  const tab = num(searchParams.get(SearchParamsKey.Tabs))
+  const isOpen = num(searchParams.get(SearchParamsKey.TabsState))
   const searchParamsObject = Object.fromEntries(searchParams)
 
   const copyText = useRef((code: string) => {
@@ -61,6 +61,11 @@ export const Rooms: FC = () => {
 
   return (
     <RoomsLiveKit>
+      <Activity mode='hidden'>
+        <div className='bg-background border-muted-foreground/40 *:bg-secondary fixed top-17 bottom-48 left-11 w-18 rounded-md border p-5 shadow *:size-8 *:rounded-[inherit]'>
+          <div></div>
+        </div>
+      </Activity>
       <div className='flex items-center justify-between gap-3 xl:-mt-31 xl:px-5 xl:py-6'>
         <div className={cn('grow text-sm', mobileOpen ? 'hidden xl:block' : 'block')}>
           <button
@@ -108,7 +113,8 @@ export const Rooms: FC = () => {
               isActive={tabIds.includes(tab) && !!isOpen}
               className='w-full xl:w-10'
               onClick={() => {
-                const selectedTab = RoomTabs.find((tabs) => tabs.metaId === id)?.id ?? null
+                // const selectedTab = RoomTabs.find((tabs) => tabs.metaId === id)?.id ?? null
+                const selectedTab = RoomTabs.find((tabs) => tabIds.includes(tabs.id))?.id ?? null
                 const toggle = isOpen ? (tabIds.includes(tab) ? null : 1) : 1
 
                 router[LiveKitConfig.TabsPushMethod](
@@ -116,8 +122,8 @@ export const Rooms: FC = () => {
                     pathname,
                     {
                       ...searchParamsObject,
-                      [ConnectionSearch.TabsState]: toggle,
-                      [ConnectionSearch.Tabs]: tab
+                      [SearchParamsKey.TabsState]: toggle,
+                      [SearchParamsKey.Tabs]: tab
                         ? tabIds.includes(tab)
                           ? tab
                           : selectedTab
