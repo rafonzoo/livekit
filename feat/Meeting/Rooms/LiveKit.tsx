@@ -16,9 +16,10 @@ import {
   MicIcon,
   CameraIcon,
   RoomAudioRenderer,
+  useMaybeRoomContext,
 } from '@livekit/components-react'
 import { cn, num } from '@/lib/utils'
-import { useConferenceRoom, usePreJoin } from '@/hooks'
+import { useConferenceRoom, useMediaControls } from '@/hooks'
 import { RoomsTabPanel } from '@/feat/Meeting/Rooms/TabPanel'
 import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
 import { SearchParamsKey } from '@/feat/Meeting/enum'
@@ -27,6 +28,9 @@ import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { ButtonIcon } from '@/components/Button'
 
 export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
+  // useMediaControls needs the live room so it can publish/toggle tracks.
+  // useMaybeRoomContext() is called here (inside the LiveKit tree) so it resolves correctly.
+  const room = useMaybeRoomContext()
   const {
     audioEnabled,
     videoEnabled,
@@ -34,7 +38,7 @@ export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
     handleToggleAudio,
     handleToggleVideo,
     handleToggleShareScreen,
-  } = usePreJoin()
+  } = useMediaControls({ room })
 
   return (
     <div className='bg-background flex items-center justify-center gap-2 rounded-md border px-1 py-2 shadow *:not-[div]:size-10 md:*:not-[div]:size-12 xl:min-h-28 xl:gap-4 xl:px-5 xl:py-6'>

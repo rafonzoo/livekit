@@ -13,9 +13,27 @@ import {
 } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
 import { usePreJoin, useTabEffect } from '@/hooks'
-import { defaultPrejoin } from '@/feat/Meeting/Tabs/content'
 import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
 import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
+
+export const defaultPrejoin = {
+  autoCheck: false,
+  isLoading: false,
+  isLoadingLabel: 'Menghubungkan...',
+  pageTitle: 'MEET',
+  roomTitle: 'Test Room',
+  roomIntro: 'Siap untuk bergabung?',
+  joinLabel: 'Masuk Ruang Rapat',
+  micLabel: 'Mikrofon utama',
+  camLabel: 'Kamera utama',
+  camOffLabel: 'Kamera mati',
+  cancelLabel: 'Batal',
+  rolesLabel: 'Bergabung sebagai',
+  roleName: 'Super Admin',
+  isGuest: true,
+  withPassword: false,
+  persistUserChoices: true,
+}
 
 export interface LocalUserChoicesPassword extends LocalUserChoices {
   password: string
@@ -38,7 +56,7 @@ export interface PreJoinProps extends Omit<PrejoinPropsBase, 'onSubmit' | 'onVal
   onValidate?: (values: LocalUserChoicesPassword) => boolean
 }
 
-export const PreJoin: FC<PreJoinProps> = (props = defaultPrejoin) => {
+export const PreJoin: FC<PreJoinProps> = (props) => {
   const {
     isLoading,
     isLoadingLabel,
@@ -53,6 +71,8 @@ export const PreJoin: FC<PreJoinProps> = (props = defaultPrejoin) => {
     isGuest,
     withPassword,
     className,
+    micLabel,
+    camLabel,
   } = useMemo(() => ({ ...defaultPrejoin, ...props }), [props])
 
   const {
@@ -78,7 +98,7 @@ export const PreJoin: FC<PreJoinProps> = (props = defaultPrejoin) => {
     handleToggleAudio,
     handleToggleVideo,
     handleSubmit,
-  } = usePreJoin(props)
+  } = usePreJoin({ micLabel, camLabel, ...props })
 
   // Handle redirect invalid tabs
   useTabEffect()
@@ -172,11 +192,11 @@ export const PreJoin: FC<PreJoinProps> = (props = defaultPrejoin) => {
                   className={cn(
                     'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
                     '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:border [&+*]:p-2 [&+*]:shadow-lg',
-                    '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
+                    '[&+*>ul>li:not([data-lk-active="true"])]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
                 >
-                  <span className='flex items-center gap-2 truncate text-left'>
+                  <span className='flex w-full items-center gap-2 truncate text-left'>
                     <MicIcon />
                     <span className='block w-full truncate'>{activeAudioLabel}</span>
                   </span>
@@ -205,11 +225,11 @@ export const PreJoin: FC<PreJoinProps> = (props = defaultPrejoin) => {
                   className={cn(
                     'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
                     '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:border [&+*]:p-2 [&+*]:shadow-lg',
-                    '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
+                    '[&+*>ul>li:not([data-lk-active="true"])]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
                 >
-                  <span className='flex items-center gap-2 truncate text-left'>
+                  <span className='flex w-full items-center gap-2 truncate text-left'>
                     <CameraIcon />
                     <span className='block w-full truncate'>{activeVideoLabel}</span>
                   </span>
