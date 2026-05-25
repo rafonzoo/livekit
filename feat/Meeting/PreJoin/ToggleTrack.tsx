@@ -4,17 +4,19 @@ import type { ComponentProps } from 'react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
-export const ToggleTrack = ({
-  isActive,
-  ...props
-}: ComponentProps<'button'> & { isActive?: boolean }) => {
+export interface ToggleTrackProps extends ComponentProps<'button'> {
+  isActive?: boolean
+  wrapperProps?: ComponentProps<'div'>
+}
+
+export const ToggleTrack = ({ isActive, wrapperProps, ...props }: ToggleTrackProps) => {
   const [mounted, setMounted] = useState(false)
 
   // Required for hydration
   useEffect(() => setMounted(true), [])
 
   return mounted ? (
-    <div className='p-1'>
+    <div {...wrapperProps}>
       <button
         type='button'
         {...props}

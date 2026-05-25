@@ -1,3 +1,22 @@
+export const defaultPrejoin = {
+  autoCheck: false,
+  isLoading: false,
+  isLoadingLabel: 'Menghubungkan...',
+  pageTitle: 'MEET',
+  roomTitle: 'Test Room',
+  roomIntro: 'Siap untuk bergabung?',
+  joinLabel: 'Masuk Ruang Rapat',
+  micLabel: 'Mikrofon utama',
+  camLabel: 'Kamera utama',
+  camOffLabel: 'Kamera mati',
+  cancelLabel: 'Batal',
+  rolesLabel: 'Bergabung sebagai',
+  roleName: 'Super Admin',
+  isGuest: true,
+  withPassword: false,
+  persistUserChoices: true,
+}
+
 export const TabsContent = [
   {
     id: 1,

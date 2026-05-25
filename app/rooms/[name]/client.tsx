@@ -116,13 +116,13 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
 
   return isReady && isCSSLoaded ? (
     <Rooms
-    // connectionDetails={connectionDetails}
-    // userChoices={preJoinChoices}
-    // options={{
-    //   codec: props.codec,
-    //   hq: props.hq,
-    //   singlePeerConnection: props.singlePeerConnection,
-    // }}
+      connectionDetails={connectionDetails}
+      userChoices={preJoinChoices}
+      options={{
+        codec: props.codec,
+        hq: props.hq,
+        singlePeerConnection: props.singlePeerConnection,
+      }}
     />
   ) : (
     <PreJoin
@@ -130,7 +130,7 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
       onSubmit={handlePreJoinSubmit.current}
       onError={handlePreJoinError.current}
       isLoading={loading}
-      isGuest={props.isTesting}
+      isGuest
     />
   )
 }

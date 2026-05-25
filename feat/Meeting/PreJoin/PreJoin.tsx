@@ -1,10 +1,8 @@
 'use client'
 
-import type { FC, MouseEvent } from 'react'
-import type { CreateLocalTracksOptions } from 'livekit-client'
+import type { FC } from 'react'
 import type { LocalUserChoices, PreJoinProps as PrejoinPropsBase } from '@livekit/components-react'
-import { useEffect, useRef, useState } from 'react'
-import { facingModeFromLocalTrack, Track } from 'livekit-client'
+import { useMemo } from 'react'
 import {
   CameraDisabledIcon,
   CameraIcon,
@@ -12,12 +10,11 @@ import {
   MediaDeviceMenu,
   MicDisabledIcon,
   MicIcon,
-  usePersistentUserChoices,
 } from '@livekit/components-react'
-import { log } from '@livekit/components-core'
 import { cn } from '@/lib/utils'
+import { usePreJoin, useTabEffect } from '@/hooks'
+import { defaultPrejoin } from '@/feat/Meeting/Tabs/content'
 import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
-import { useProgressiveTracks, useTabEffect } from '@/feat/Meeting/hooks'
 import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
 
 export interface LocalUserChoicesPassword extends LocalUserChoices {
@@ -41,201 +38,54 @@ export interface PreJoinProps extends Omit<PrejoinPropsBase, 'onSubmit' | 'onVal
   onValidate?: (values: LocalUserChoicesPassword) => boolean
 }
 
-export const PreJoin: FC<PreJoinProps> = ({
-  defaults = {},
-  onValidate,
-  onSubmit,
-  onError,
-  debug: _debug,
-  autoCheck = false,
-  isLoading = false,
-  isLoadingLabel = 'Menghubungkan...',
-  pageTitle = 'MEET',
-  roomTitle = 'Test Room',
-  roomIntro = 'Siap untuk bergabung?',
-  joinLabel = 'Masuk Ruang Rapat',
-  micLabel = 'Mikrofon utama',
-  camLabel = 'Kamera utama',
-  camOffLabel = 'Kamera mati',
-  userLabel: _userLabel = 'Username',
-  cancelLabel = 'Batal',
-  rolesLabel = 'Bergabung sebagai',
-  roleName = 'Super Admin',
-  isGuest = false,
-  withPassword = false,
-  persistUserChoices = true,
-  videoProcessor,
-  ...wrapperProps
-}) => {
+export const PreJoin: FC<PreJoinProps> = (props = defaultPrejoin) => {
   const {
-    userChoices: initialUserChoices,
-    saveAudioInputDeviceId,
-    saveAudioInputEnabled,
-    saveVideoInputDeviceId,
-    saveVideoInputEnabled,
-  } = usePersistentUserChoices({
-    defaults: { ...defaults, username: isGuest ? '' : (defaults.username ?? '') },
-    preventSave: !persistUserChoices,
-    preventLoad: !persistUserChoices,
-  })
+    isLoading,
+    isLoadingLabel,
+    pageTitle,
+    roomTitle,
+    roomIntro,
+    joinLabel,
+    camOffLabel,
+    cancelLabel,
+    rolesLabel,
+    roleName,
+    isGuest,
+    withPassword,
+    className,
+  } = useMemo(() => ({ ...defaultPrejoin, ...props }), [props])
 
-  // Initialize device settings
-  const [userChoices, setUserChoices] = useState(initialUserChoices)
-  const [audioEnabled, setAudioEnabled] = useState(userChoices.audioEnabled)
-  const [videoEnabled, setVideoEnabled] = useState(userChoices.videoEnabled)
-  const [audioDeviceId, setAudioDeviceId] = useState(userChoices.audioDeviceId)
-  const [videoDeviceId, setVideoDeviceId] = useState(userChoices.videoDeviceId)
-  const [deniedDevices, setDeniedDevices] = useState<string[]>([])
-  const [activeAudioLabel, setActiveAudioLabel] = useState(micLabel)
-  const [activeVideoLabel, setActiveVideoLabel] = useState(camLabel)
-  const [username, setUsername] = useState(userChoices.username)
-  const [password, setPassword] = useState('')
-  const [isValid, setIsValid] = useState(false)
-
-  // Capture config
-  const audioConfig = { deviceId: initialUserChoices.audioDeviceId }
-  const videoConfig = {
-    deviceId: initialUserChoices.videoDeviceId,
-    processor: videoProcessor,
-  }
-
-  const [media, setMedia] = useState<CreateLocalTracksOptions>({
-    audio: autoCheck ? audioConfig : audioEnabled ? audioConfig : false,
-    video: autoCheck ? videoConfig : videoEnabled ? videoConfig : false,
-  })
-
-  const formattedLabel = deniedDevices
-    .map((media) => media.replace('video', 'kamera').replace('audio', 'mikrofon'))
-    .join(' dan ')
-
-  const tracks = useProgressiveTracks(media, (error, errorKind) => {
-    setDeniedDevices((prev) => Array.from(new Set([...prev, errorKind])))
-    onError?.(error)
-
-    if (errorKind === Track.Kind.Audio) setAudioEnabled(false)
-    if (errorKind === Track.Kind.Video) setVideoEnabled(false)
-  })
-
-  const videoTrack = tracks?.find((track) => track.kind === Track.Kind.Video)
-  const audioTrack = tracks?.find((track) => track.kind === Track.Kind.Audio)
-  const facingMode = !videoTrack ? 'undefined' : facingModeFromLocalTrack(videoTrack)?.facingMode
-  const videoEl = useRef(null)
-
-  // With ref because its param is already in effect, and `onValidate` might not wrapped in `useCallback`
-  const handleValidation = useRef((values: LocalUserChoicesPassword) =>
-    (onValidate?.(values) ?? (isGuest && withPassword))
-      ? !!values.password && !!values.username.trim()
-      : withPassword
-        ? !!values.password
-        : !!values.username.trim()
-  )
-
-  const handleSubmit = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-
-    if (handleValidation.current({ ...userChoices, password })) {
-      return onSubmit?.({ ...userChoices, password })
-    }
-
-    log.warn('Validation failed with: ', userChoices)
-  }
-
-  const handleToggleAudio = () => {
-    setAudioEnabled((v) => !v)
-
-    if (!audioEnabled) {
-      setMedia((prev) => ({
-        ...prev,
-        audio: { deviceId: audioDeviceId },
-      }))
-    } else {
-      setMedia((prev) => ({ ...prev, audio: false }))
-    }
-  }
-
-  const handleToggleVideo = () => {
-    setVideoEnabled((v) => !v)
-
-    if (!videoEnabled) {
-      setMedia((prev) => ({
-        ...prev,
-        video: {
-          deviceId: videoDeviceId,
-          processor: videoProcessor,
-        },
-      }))
-    } else {
-      setMedia((prev) => ({ ...prev, video: false }))
-    }
-  }
-
-  // Save user choices to persistent storage.
-  useEffect(() => saveAudioInputEnabled(audioEnabled), [audioEnabled, saveAudioInputEnabled])
-  useEffect(() => saveVideoInputEnabled(videoEnabled), [videoEnabled, saveVideoInputEnabled])
-  useEffect(() => saveAudioInputDeviceId(audioDeviceId), [audioDeviceId, saveAudioInputDeviceId])
-  useEffect(() => saveVideoInputDeviceId(videoDeviceId), [videoDeviceId, saveVideoInputDeviceId])
-
-  // Sync choices
-  useEffect(() => {
-    const newUserChoices = {
-      username,
-      videoEnabled,
-      videoDeviceId,
-      audioEnabled,
-      audioDeviceId,
-    }
-    setUserChoices(newUserChoices)
-    setIsValid(handleValidation.current({ ...newUserChoices, password }))
-  }, [username, password, videoEnabled, audioEnabled, audioDeviceId, videoDeviceId])
-
-  // Sync video
-  useEffect(() => {
-    if (videoEl.current && videoTrack) {
-      videoTrack.unmute()
-      videoTrack.attach(videoEl.current)
-    }
-
-    return () => {
-      videoTrack?.detach()
-    }
-  }, [videoTrack])
-
-  // Sync state based on audio track
-  useEffect(() => {
-    if (audioTrack) {
-      setAudioEnabled((prev) => (!prev ? !!audioTrack : prev))
-      setActiveAudioLabel((prev) => audioTrack?.mediaStreamTrack.label ?? prev)
-      setDeniedDevices((prev) =>
-        !prev.includes(Track.Kind.Audio)
-          ? prev
-          : prev.filter((previous) => previous !== Track.Kind.Audio)
-      )
-    }
-  }, [audioTrack])
-
-  // Sync state based on audio track
-  useEffect(() => {
-    if (videoTrack) {
-      setVideoEnabled((prev) => (!prev ? !!videoTrack : prev))
-      setActiveVideoLabel((prev) => videoTrack?.mediaStreamTrack.label ?? prev)
-      setDeniedDevices((prev) =>
-        !prev.includes(Track.Kind.Video)
-          ? prev
-          : prev.filter((previous) => previous !== Track.Kind.Video)
-      )
-    }
-  }, [videoTrack])
+  const {
+    deniedDevices,
+    formattedLabel,
+    videoEl,
+    facingMode,
+    audioEnabled,
+    audioDeviceId,
+    audioTrack,
+    videoEnabled,
+    videoDeviceId,
+    videoTrack,
+    activeAudioLabel,
+    activeVideoLabel,
+    username,
+    isValid,
+    setAudioDeviceId,
+    setVideoDeviceId,
+    setUsername,
+    setMedia,
+    setPassword,
+    handleToggleAudio,
+    handleToggleVideo,
+    handleSubmit,
+  } = usePreJoin(props)
 
   // Handle redirect invalid tabs
   useTabEffect()
 
   return (
     <main
-      {...wrapperProps}
-      className={cn(
-        'flex h-full min-h-screen w-full items-center justify-center py-10',
-        wrapperProps.className
-      )}
+      className={cn('flex h-full min-h-screen w-full items-center justify-center py-10', className)}
     >
       <figure className='fixed inset-0'>
         <img
@@ -285,6 +135,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   title={audioEnabled ? 'Bisukan mikrofon' : 'Aktifkan mikrofon'}
                   isActive={audioEnabled}
                   onClick={handleToggleAudio}
+                  wrapperProps={{ className: cn('p-1') }}
                 >
                   {audioEnabled ? <MicIcon /> : <MicDisabledIcon />}
                 </ToggleTrack>
@@ -292,6 +143,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   title={videoEnabled ? 'Tutup kamera' : 'Aktifkan kamera'}
                   isActive={videoEnabled}
                   onClick={handleToggleVideo}
+                  wrapperProps={{ className: cn('p-1') }}
                 >
                   {videoEnabled ? <CameraIcon /> : <CameraDisabledIcon />}
                 </ToggleTrack>
@@ -382,7 +234,7 @@ export const PreJoin: FC<PreJoinProps> = ({
                   className='hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between rounded-md border px-3 text-sm disabled:opacity-40'
                   value={username}
                   required
-                  onChange={(e) => setUsername(e.currentTarget.value.trim())}
+                  onChange={(e) => setUsername(e.currentTarget.value)}
                   autoComplete='off'
                   placeholder='Masukkan nama'
                 />

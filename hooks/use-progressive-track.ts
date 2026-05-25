@@ -1,13 +1,9 @@
 import type { CreateLocalTracksOptions, LocalAudioTrack, LocalVideoTrack } from 'livekit-client'
-import { useState, useEffect, useRef, useEffectEvent } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
 import { Mutex, Track, createLocalTracks } from 'livekit-client'
 import { log } from '@livekit/components-core'
-import { num, omit, qstring } from '@/lib/utils'
-import { SearchParamsKey, LiveKitConfig } from '@/feat/Meeting/enum'
-import { RoomTabs } from '@/feat/Meeting/const'
 
-export function useProgressiveTracks(
+export function useProgressiveTrack(
   options: CreateLocalTracksOptions,
   onError?: (err: Error, kind: Track.Kind.Audio | Track.Kind.Video) => void
 ) {
@@ -63,27 +59,4 @@ export function useProgressiveTracks(
   useEffect(() => handleTrackRef.current(Track.Kind.Audio, audio, onError), [onError, audio])
 
   return tracks
-}
-
-export function useTabEffect() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const tab = num(searchParams.get(SearchParamsKey.Tabs))
-
-  const redirectInvalidTab = useEffectEvent((tabId: number) => {
-    if (!RoomTabs.find((tabs) => tabs.id === tabId)) {
-      router[LiveKitConfig.TabsPushMethod](
-        qstring(
-          pathname,
-          omit({ ...Object.fromEntries(searchParams) }, [
-            SearchParamsKey.Tabs,
-            SearchParamsKey.TabsState,
-          ])
-        )
-      )
-    }
-  })
-
-  useEffect(() => redirectInvalidTab(tab), [tab])
 }

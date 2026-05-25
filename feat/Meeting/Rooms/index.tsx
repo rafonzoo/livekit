@@ -1,12 +1,13 @@
 'use client'
 
 import type { FC, MouseEvent } from 'react'
+import type { RoomsConferenceProps } from '@/feat/Meeting/Rooms/Conference'
 import { Activity, useEffect, useRef, useState } from 'react'
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ChatIcon, CopyIcon } from '@phosphor-icons/react'
 import { cn, num, qstring } from '@/lib/utils'
 import { TabsButton } from '@/feat/Meeting/Tabs'
-import { RoomsLiveKit } from '@/feat/Meeting/Rooms/LiveKit'
+import { RoomsConference } from '@/feat/Meeting/Rooms/Conference'
 import { copyHandler } from '@/feat/Meeting/helpers'
 import { SearchParamsKey, LiveKitConfig } from '@/feat/Meeting/enum'
 import { RoomTabsCopy, RoomTabs } from '@/feat/Meeting/const'
@@ -19,7 +20,7 @@ import {
   Menu,
 } from '@/components/HugeIcon'
 
-export const Rooms: FC = () => {
+export const Rooms: FC<RoomsConferenceProps> = (props) => {
   const [mobileOpen, setMobileOpen] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
@@ -60,7 +61,7 @@ export const Rooms: FC = () => {
   }, [])
 
   return (
-    <RoomsLiveKit>
+    <RoomsConference {...props}>
       <Activity mode='hidden'>
         <div className='bg-background border-muted-foreground/40 *:bg-secondary fixed top-17 bottom-48 left-11 w-18 rounded-md border p-5 shadow *:size-8 *:rounded-[inherit]'>
           <div></div>
@@ -139,6 +140,6 @@ export const Rooms: FC = () => {
           ))}
         </div>
       </div>
-    </RoomsLiveKit>
+    </RoomsConference>
   )
 }
