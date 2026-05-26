@@ -12,4 +12,5 @@ export enum ConnectionInterceptor {
 export enum SearchParamsKey {
   Tabs = 'tab',
   TabsState = 'io',
+  Whiteboard = 'wb',
 }

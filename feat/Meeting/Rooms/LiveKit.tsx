@@ -2,7 +2,14 @@
 
 import type { ComponentProps, CSSProperties, FC, ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { HandIcon, MonitorPlayIcon, PhoneSlashIcon, SmileyIcon } from '@phosphor-icons/react'
+import { default as dynamic } from 'next/dynamic'
+import {
+  HandIcon,
+  MonitorPlayIcon,
+  PhoneSlashIcon,
+  SmileyIcon,
+  SpinnerIcon,
+} from '@phosphor-icons/react'
 import {
   MicDisabledIcon,
   CameraDisabledIcon,
@@ -26,6 +33,15 @@ import { SearchParamsKey } from '@/feat/Meeting/enum'
 import { RoomTabs } from '@/feat/Meeting/const'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { ButtonIcon } from '@/components/Button'
+
+const Whiteboard = dynamic(() => import('@/feat/Meeting/Addons/Whiteboard'), {
+  ssr: false,
+  loading: () => (
+    <div className='bg-background text-muted-foreground absolute inset-0 z-5 flex items-center justify-center overflow-hidden rounded-md text-sm'>
+      <SpinnerIcon size={24} className='mr-2 animate-spin' /> Tunggu sebentar...
+    </div>
+  ),
+})
 
 export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
   // useMediaControls needs the live room so it can publish/toggle tracks.
@@ -91,6 +107,7 @@ export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, 
   const isOpen = num(searchParams.get(SearchParamsKey.TabsState))
   const currentTab = RoomTabs.find(({ id }) => tab === id)
   const RoomsPanelContent = currentTab?.content ?? (() => null)
+  const isWhiteboardOpen = !!num(searchParams.get(SearchParamsKey.Whiteboard))
 
   return (
     <LayoutContextProvider value={layoutContext}>
@@ -120,6 +137,9 @@ export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, 
               data-lk-theme='default'
               style={{ '--lk-control-bar-height': '0px' } as CSSProperties}
             >
+              <div className={cn(!isWhiteboardOpen ? 'hidden' : void 0)}>
+                <Whiteboard />
+              </div>
               <div className='absolute inset-0 *:h-full *:w-full'>
                 {!focusTrack ? (
                   <div className='lk-grid-layout-wrapper'>
