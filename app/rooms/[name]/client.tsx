@@ -131,7 +131,6 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
       onError={handlePreJoinError.current}
       isLoading={loading}
       isGuest={props.isTesting}
-      // isGuest
     />
   )
 }
