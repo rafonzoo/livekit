@@ -1,10 +1,8 @@
 'use client'
 
-import type { FC, MouseEvent } from 'react'
+import type { FC } from 'react'
 import type { LocalUserChoices, PreJoinProps as PrejoinPropsBase } from '@livekit/components-react'
-import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Loader } from 'lucide-react'
-import { facingModeFromLocalTrack, Track } from 'livekit-client'
+import { useMemo } from 'react'
 import {
   CameraDisabledIcon,
   CameraIcon,
@@ -12,18 +10,37 @@ import {
   MediaDeviceMenu,
   MicDisabledIcon,
   MicIcon,
-  usePersistentUserChoices,
 } from '@livekit/components-react'
-import { log } from '@livekit/components-core'
 import { cn } from '@/lib/utils'
-import { ToggleTrack } from '@/feat/LiveKit/PreJoin/ToggleTrack'
-import { useProgressiveTracks } from '@/feat/LiveKit/hooks'
+import { usePreJoin, useTabEffect } from '@/hooks'
+import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
+import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
+
+export const defaultPrejoin = {
+  autoCheck: false,
+  isLoading: false,
+  isLoadingLabel: 'Menghubungkan...',
+  pageTitle: 'MEET',
+  roomTitle: 'Test Room',
+  roomIntro: 'Siap untuk bergabung?',
+  joinLabel: 'Masuk Ruang Rapat',
+  micLabel: 'Mikrofon utama',
+  camLabel: 'Kamera utama',
+  camOffLabel: 'Kamera mati',
+  cancelLabel: 'Batal',
+  rolesLabel: 'Bergabung sebagai',
+  roleName: 'Super Admin',
+  isGuest: true,
+  withPassword: false,
+  persistUserChoices: true,
+}
 
 export interface LocalUserChoicesPassword extends LocalUserChoices {
   password: string
 }
 
 export interface PreJoinProps extends Omit<PrejoinPropsBase, 'onSubmit' | 'onValidate'> {
+  autoCheck?: boolean
   camOffLabel?: string
   roomTitle?: string
   roomIntro?: string
@@ -39,189 +56,56 @@ export interface PreJoinProps extends Omit<PrejoinPropsBase, 'onSubmit' | 'onVal
   onValidate?: (values: LocalUserChoicesPassword) => boolean
 }
 
-export const PreJoin: FC<PreJoinProps> = ({
-  defaults = {},
-  onValidate,
-  onSubmit,
-  onError,
-  debug: _debug,
-  isLoading = false,
-  isLoadingLabel = 'Menghubungkan...',
-  pageTitle = 'MEET',
-  roomTitle = 'Test Room',
-  roomIntro = 'Siap untuk bergabung?',
-  joinLabel = 'Masuk Ruang Rapat',
-  micLabel = 'Mikrofon utama',
-  camLabel = 'Kamera utama',
-  camOffLabel = 'Kamera mati',
-  userLabel: _userLabel = 'Username',
-  cancelLabel = 'Batal',
-  rolesLabel = 'Bergabung sebagai',
-  roleName = 'Super Admin',
-  isGuest = false,
-  withPassword = false,
-  persistUserChoices = true,
-  videoProcessor,
-  ...wrapperProps
-}) => {
+export const PreJoin: FC<PreJoinProps> = (props) => {
   const {
-    userChoices: initialUserChoices,
-    saveAudioInputDeviceId,
-    saveAudioInputEnabled,
-    saveVideoInputDeviceId,
-    saveVideoInputEnabled,
-  } = usePersistentUserChoices({
-    defaults: { ...defaults, username: isGuest ? '' : (defaults.username ?? '') },
-    preventSave: !persistUserChoices,
-    preventLoad: !persistUserChoices,
-  })
+    isLoading,
+    isLoadingLabel,
+    pageTitle,
+    roomTitle,
+    roomIntro,
+    joinLabel,
+    camOffLabel,
+    cancelLabel,
+    rolesLabel,
+    roleName,
+    isGuest,
+    withPassword,
+    className,
+    micLabel,
+    camLabel,
+  } = useMemo(() => ({ ...defaultPrejoin, ...props }), [props])
 
-  // Initialize device settings
-  const [userChoices, setUserChoices] = useState(initialUserChoices)
-  const [audioEnabled, setAudioEnabled] = useState(userChoices.audioEnabled)
-  const [videoEnabled, setVideoEnabled] = useState(userChoices.videoEnabled)
-  const [audioDeviceId, setAudioDeviceId] = useState(userChoices.audioDeviceId)
-  const [videoDeviceId, setVideoDeviceId] = useState(userChoices.videoDeviceId)
-  const [deniedDevices, setDeniedDevices] = useState<string[]>([])
-  const [activeAudioLabel, setActiveAudioLabel] = useState(micLabel)
-  const [activeVideoLabel, setActiveVideoLabel] = useState(camLabel)
-  const [username, setUsername] = useState(userChoices.username)
-  const [password, setPassword] = useState('')
-  const [isValid, setIsValid] = useState(false)
-  const [media, setMedia] = useState({
-    audio: audioEnabled ? { deviceId: initialUserChoices.audioDeviceId } : false,
-    video: videoEnabled
-      ? {
-          deviceId: initialUserChoices.videoDeviceId,
-          processor: videoProcessor,
-        }
-      : false,
-  })
+  const {
+    deniedDevices,
+    formattedLabel,
+    videoEl,
+    facingMode,
+    audioEnabled,
+    audioDeviceId,
+    audioTrack,
+    videoEnabled,
+    videoDeviceId,
+    videoTrack,
+    activeAudioLabel,
+    activeVideoLabel,
+    username,
+    isValid,
+    setAudioDeviceId,
+    setVideoDeviceId,
+    setUsername,
+    setMedia,
+    setPassword,
+    handleToggleAudio,
+    handleToggleVideo,
+    handleSubmit,
+  } = usePreJoin({ micLabel, camLabel, ...props })
 
-  const formattedMedia = deniedDevices
-    .map((media) => media.replace('video', 'kamera').replace('audio', 'mikrofon'))
-    .join(' dan ')
-
-  const tracks = useProgressiveTracks(media, (error, errorKind) => {
-    setDeniedDevices((prev) => Array.from(new Set([...prev, errorKind])))
-    onError?.(error)
-
-    if (errorKind === Track.Kind.Audio) setAudioEnabled(false)
-    if (errorKind === Track.Kind.Video) setVideoEnabled(false)
-  })
-
-  const videoTrack = tracks?.find((track) => track.kind === Track.Kind.Video)
-  const audioTrack = tracks?.find((track) => track.kind === Track.Kind.Audio)
-  const facingMode = !videoTrack ? 'undefined' : facingModeFromLocalTrack(videoTrack)?.facingMode
-  const videoEl = useRef(null)
-
-  // With ref because its param already in effect, and `onValidate` might not wrapped in `useCallback`
-  const handleValidation = useRef((values: LocalUserChoicesPassword) =>
-    (onValidate?.(values) ?? (isGuest && withPassword))
-      ? !!values.password && !!values.username.trim()
-      : withPassword
-        ? !!values.password
-        : !!values.username.trim()
-  )
-
-  const handleSubmit = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-
-    if (handleValidation.current({ ...userChoices, password })) {
-      return onSubmit?.({ ...userChoices, password })
-    }
-
-    log.warn('Validation failed with: ', userChoices)
-  }
-
-  const handleToggleAudio = () => {
-    setAudioEnabled((v) => !v)
-
-    if (!audioEnabled) {
-      setMedia((prev) => ({
-        ...prev,
-        audio: { deviceId: audioDeviceId },
-      }))
-    } else {
-      setMedia((prev) => ({ ...prev, audio: false }))
-    }
-  }
-
-  const handleToggleVideo = () => {
-    setVideoEnabled((v) => !v)
-
-    if (!videoEnabled) {
-      setMedia((prev) => ({
-        ...prev,
-        video: {
-          deviceId: videoDeviceId,
-          processor: videoProcessor,
-        },
-      }))
-    } else {
-      setMedia((prev) => ({ ...prev, video: false }))
-    }
-  }
-
-  // Save user choices to persistent storage.
-  useEffect(() => saveAudioInputEnabled(audioEnabled), [audioEnabled, saveAudioInputEnabled])
-  useEffect(() => saveVideoInputEnabled(videoEnabled), [videoEnabled, saveVideoInputEnabled])
-  useEffect(() => saveAudioInputDeviceId(audioDeviceId), [audioDeviceId, saveAudioInputDeviceId])
-  useEffect(() => saveVideoInputDeviceId(videoDeviceId), [videoDeviceId, saveVideoInputDeviceId])
-
-  // Sync choices
-  useEffect(() => {
-    const newUserChoices = {
-      username,
-      videoEnabled,
-      videoDeviceId,
-      audioEnabled,
-      audioDeviceId,
-    }
-    setUserChoices(newUserChoices)
-    setIsValid(handleValidation.current({ ...newUserChoices, password }))
-  }, [username, password, videoEnabled, audioEnabled, audioDeviceId, videoDeviceId])
-
-  // Sync video
-  useEffect(() => {
-    if (videoEl.current && videoTrack) {
-      videoTrack.unmute()
-      videoTrack.attach(videoEl.current)
-    }
-
-    return () => {
-      videoTrack?.detach()
-    }
-  }, [videoTrack])
-
-  // Sync media permission and its label
-  useEffect(() => {
-    if (audioTrack) {
-      setActiveAudioLabel((prev) => audioTrack?.mediaStreamTrack.label ?? prev)
-      setDeniedDevices((prev) =>
-        !prev.includes(Track.Kind.Audio)
-          ? prev
-          : prev.filter((previous) => previous !== Track.Kind.Audio)
-      )
-    }
-
-    if (videoTrack) {
-      setActiveVideoLabel((prev) => videoTrack?.mediaStreamTrack.label ?? prev)
-      setDeniedDevices((prev) =>
-        !prev.includes(Track.Kind.Video)
-          ? prev
-          : prev.filter((previous) => previous !== Track.Kind.Video)
-      )
-    }
-  }, [audioTrack, videoTrack])
+  // Handle redirect invalid tabs
+  useTabEffect()
 
   return (
-    <div
-      {...wrapperProps}
-      className={cn(
-        'flex h-full min-h-screen w-full items-center justify-center py-10',
-        wrapperProps.className
-      )}
+    <main
+      className={cn('flex h-full min-h-screen w-full items-center justify-center py-10', className)}
     >
       <figure className='fixed inset-0'>
         <img
@@ -234,17 +118,17 @@ export const PreJoin: FC<PreJoinProps> = ({
         <h2 className='mb-6 text-center text-[48px] leading-12 font-semibold text-white'>
           {pageTitle}
         </h2>
-        <div className='bg-background flex flex-col gap-4 rounded-md p-8 text-sm'>
+        <div className='bg-background flex flex-col gap-4 rounded-md p-4 pt-8 text-sm md:p-8'>
           <header className='text-center'>
             <p className='text-primary text-2xl font-semibold'>{roomIntro}</p>
             <p className='mt-2'>{roomTitle}</p>
           </header>
           {!!deniedDevices.length && (
             <p className='text-destructive grid grid-cols-[18px_1fr] gap-3 rounded-md bg-red-200 p-4'>
-              <AlertTriangle size={18} />
-              Error: Tidak dapat menemukan {formattedMedia}, atau pengguna menolak atas izin akses{' '}
-              {formattedMedia}. Silahkan muat ulang halaman ini, atau tutup dan kembali ke halaman
-              ini untuk mengaktifkan {formattedMedia}.
+              <HugeIcon icon={Alert01FreeIcons} size={18} />
+              Error: Tidak dapat menemukan {formattedLabel}, atau pengguna menolak atas izin akses{' '}
+              {formattedLabel}. Silahkan muat ulang halaman ini, atau tutup dan kembali ke halaman
+              ini untuk mengaktifkan {formattedLabel}.
             </p>
           )}
           <div className='bg-secondary relative aspect-video min-h-50 w-full overflow-hidden rounded-md'>
@@ -265,12 +149,13 @@ export const PreJoin: FC<PreJoinProps> = ({
                   <p className='mt-5 text-base font-semibold'>{camOffLabel}</p>
                 </div>
               )}
-              <div className='relative flex gap-1 overflow-hidden rounded-full bg-white'>
+              <div className='bg-background relative flex gap-1 overflow-hidden rounded-full'>
                 <div className='bg-primary/20 absolute inset-0 h-auto! w-auto!' />
                 <ToggleTrack
                   title={audioEnabled ? 'Bisukan mikrofon' : 'Aktifkan mikrofon'}
                   isActive={audioEnabled}
                   onClick={handleToggleAudio}
+                  wrapperProps={{ className: cn('p-1') }}
                 >
                   {audioEnabled ? <MicIcon /> : <MicDisabledIcon />}
                 </ToggleTrack>
@@ -278,13 +163,14 @@ export const PreJoin: FC<PreJoinProps> = ({
                   title={videoEnabled ? 'Tutup kamera' : 'Aktifkan kamera'}
                   isActive={videoEnabled}
                   onClick={handleToggleVideo}
+                  wrapperProps={{ className: cn('p-1') }}
                 >
                   {videoEnabled ? <CameraIcon /> : <CameraDisabledIcon />}
                 </ToggleTrack>
               </div>
             </div>
           </div>
-          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <div className='flex flex-col gap-2'>
               <p>Mikrofon</p>
               <div id='list-audio' className='h-11 rounded-md border'>
@@ -305,12 +191,12 @@ export const PreJoin: FC<PreJoinProps> = ({
                   }}
                   className={cn(
                     'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
-                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:p-2 [&+*]:shadow-lg',
-                    '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
+                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:border [&+*]:p-2 [&+*]:shadow-lg',
+                    '[&+*>ul>li:not([data-lk-active="true"])]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
                 >
-                  <span className='flex items-center gap-2 truncate text-left'>
+                  <span className='flex w-full items-center gap-2 truncate text-left'>
                     <MicIcon />
                     <span className='block w-full truncate'>{activeAudioLabel}</span>
                   </span>
@@ -338,12 +224,12 @@ export const PreJoin: FC<PreJoinProps> = ({
                   }}
                   className={cn(
                     'hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between gap-3 rounded-md px-3 disabled:opacity-40',
-                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:p-2 [&+*]:shadow-lg',
-                    '[&+*>ul>li:not(:first-child)]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
+                    '[&+*]:bg-background [&+*]:absolute [&+*]:z-1 [&+*]:w-max [&+*]:min-w-40 [&+*]:rounded-md [&+*]:border [&+*]:p-2 [&+*]:shadow-lg',
+                    '[&+*>ul>li:not([data-lk-active="true"])]:hover:not-disabled:bg-secondary [&+*_button]:h-10 [&+*_button]:w-full [&+*_button]:px-4 [&+*_button]:text-left [&+*>ul>li]:overflow-hidden [&+*>ul>li]:rounded-md [&+*>ul>li:not(:first-child)]:mt-1',
                     '[&+*_[data-lk-active="true"]>button]:bg-primary [&+*_[data-lk-active="true"]>button]:text-primary-foreground [&+*_[data-lk-active="true"]>button]:font-semibold'
                   )}
                 >
-                  <span className='flex items-center gap-2 truncate text-left'>
+                  <span className='flex w-full items-center gap-2 truncate text-left'>
                     <CameraIcon />
                     <span className='block w-full truncate'>{activeVideoLabel}</span>
                   </span>
@@ -366,9 +252,9 @@ export const PreJoin: FC<PreJoinProps> = ({
                   name='username'
                   type='text'
                   className='hover:not-disabled:bg-secondary inline-flex h-11 w-full items-center justify-between rounded-md border px-3 text-sm disabled:opacity-40'
-                  defaultValue={username}
+                  value={username}
                   required
-                  onChange={(e) => setUsername(e.currentTarget.value.trim())}
+                  onChange={(e) => setUsername(e.currentTarget.value)}
                   autoComplete='off'
                   placeholder='Masukkan nama'
                 />
@@ -396,7 +282,7 @@ export const PreJoin: FC<PreJoinProps> = ({
             >
               {isLoading ? (
                 <>
-                  <Loader size={20} className='animate-spin' />
+                  <HugeIcon icon={Loading03FreeIcons} size={20} className='animate-spin' />
                   {isLoadingLabel && <span className='ml-2 inline-block'>{isLoadingLabel}</span>}
                 </>
               ) : (
@@ -405,7 +291,7 @@ export const PreJoin: FC<PreJoinProps> = ({
             </button>
             <button
               type='button'
-              className='border-muted-foreground hover:not-disabled:bg-secondary inline-flex h-11 items-center justify-center rounded-md border px-4 font-semibold'
+              className='hover:not-disabled:bg-secondary inline-flex h-11 items-center justify-center rounded-md border px-4 font-semibold shadow'
             >
               {cancelLabel}
             </button>
@@ -415,6 +301,6 @@ export const PreJoin: FC<PreJoinProps> = ({
           Dengan bergabung, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi kami.
         </p>
       </div>
-    </div>
+    </main>
   )
 }

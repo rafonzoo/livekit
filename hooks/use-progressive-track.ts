@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Mutex, Track, createLocalTracks } from 'livekit-client'
 import { log } from '@livekit/components-core'
 
-export function useProgressiveTracks(
+export function useProgressiveTrack(
   options: CreateLocalTracksOptions,
   onError?: (err: Error, kind: Track.Kind.Audio | Track.Kind.Video) => void
 ) {
@@ -55,8 +55,8 @@ export function useProgressiveTracks(
     }
   )
 
-  useEffect(() => handleTrackRef.current(Track.Kind.Audio, audio, onError), [onError, audio])
   useEffect(() => handleTrackRef.current(Track.Kind.Video, video, onError), [onError, video])
+  useEffect(() => handleTrackRef.current(Track.Kind.Audio, audio, onError), [onError, audio])
 
   return tracks
 }

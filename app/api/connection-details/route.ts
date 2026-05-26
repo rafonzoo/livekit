@@ -1,11 +1,11 @@
 import type { NextRequest } from 'next/server'
 import type { AccessTokenOptions, VideoGrant } from 'livekit-server-sdk'
-import type { ConnectionDetails } from '@/feat/LiveKit/types'
+import type { ConnectionDetails } from '@/feat/Meeting/types'
 import { NextResponse } from 'next/server'
 import { AccessToken } from 'livekit-server-sdk'
 import { randomString } from '@/lib/utils'
-import { getLiveKitURL } from '@/feat/LiveKit/helpers'
-import { ConnectionInterceptor } from '@/feat/LiveKit/const'
+import { getLiveKitURL } from '@/feat/Meeting/helpers'
+import { ConnectionInterceptor } from '@/feat/Meeting/enum'
 
 const API_KEY = process.env.LIVEKIT_API_KEY
 const API_SECRET = process.env.LIVEKIT_API_SECRET
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Change this for testing
     let interceptor: ConnectionInterceptor | null = null
 
-    interceptor = 'waiting' as never
+    interceptor = (process.env.LIVEKIT_API_INTERCEPTOR ?? null) as never
 
     if (!interceptor || interceptor === ConnectionInterceptor.Waiting) {
       return new NextResponse(JSON.stringify({ ...data, interceptor }), {

@@ -1,4 +1,4 @@
-import { isVideoCodec } from '@/feat/LiveKit/helpers'
+import { isVideoCodec } from '@/feat/Meeting/helpers'
 import { RoomsDetailClient } from '@/app/rooms/[name]/client'
 
 interface RoomsDetailPageProps {
@@ -22,6 +22,7 @@ export default async function RoomsDetailPage(props: RoomsDetailPageProps) {
       hq={seachParams.hq === 'true'}
       codec={isVideoCodec(seachParams.codec) ? seachParams.codec : 'vp9'}
       singlePeerConnection={seachParams.singlePC !== 'false'}
+      isTesting={!!process.env.LIVEKIT_API_INTERCEPTOR}
     />
   )
 }

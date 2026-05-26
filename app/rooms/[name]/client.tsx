@@ -3,13 +3,13 @@
 import type { FC } from 'react'
 import type { VideoCodec } from 'livekit-client'
 import type { LocalUserChoices } from '@livekit/components-react'
-import type { ConnectionDetails } from '@/feat/LiveKit/types'
-import type { LocalUserChoicesPassword } from '@/feat/LiveKit/PreJoin/PreJoin'
+import type { ConnectionDetails } from '@/feat/Meeting/types'
+import type { LocalUserChoicesPassword } from '@/feat/Meeting/PreJoin/PreJoin'
 import { useEffect, useRef, useState } from 'react'
-import { PreJoin } from '@/feat/LiveKit/PreJoin/PreJoin'
-import { InterceptorRoom } from '@/feat/LiveKit/PreJoin/InterceptorRoom'
-import { ConnectionInterceptor } from '@/feat/LiveKit/const'
-import { VideoConference } from '@/feat/LiveKit/Conference/VideoConference'
+import { Rooms } from '@/feat/Meeting/Rooms'
+import { PreJoin } from '@/feat/Meeting/PreJoin/PreJoin'
+import { InterceptorRoom } from '@/feat/Meeting/PreJoin/InterceptorRoom'
+import { ConnectionInterceptor } from '@/feat/Meeting/enum'
 
 const LIVEKIT_CSS_ENABLE = true
 
@@ -17,18 +17,13 @@ const LIVEKIT_CSS_ID = 'livekit-style'
 
 const LIVEKIT_CSS_PATH = '/lib/css/livekit.css'
 
-const LIVEKIT_PREJOIN_DEFAULT = {
-  username: '', // Required
-  videoEnabled: true,
-  audioEnabled: true,
-}
-
 interface RoomsDetailProps {
   roomName: string
   region?: string
   hq: boolean
   codec: VideoCodec
   singlePeerConnection: boolean
+  isTesting?: boolean
 }
 
 export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
@@ -39,7 +34,7 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
   const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails | undefined>()
 
   // Reference
-  const preJoinDefaults = useRef(LIVEKIT_PREJOIN_DEFAULT)
+  const preJoinDefaults = useRef({ username: '', audioEnabled: false, videoEnabled: false })
   const connectionDetailsRef = useRef<ConnectionDetails | undefined>(undefined)
   const isReady = !!connectionDetails && !!preJoinChoices
   const handlePreJoinError = useRef((e: unknown) => console.error(e))
@@ -120,7 +115,7 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
   }
 
   return isReady && isCSSLoaded ? (
-    <VideoConference
+    <Rooms
       connectionDetails={connectionDetails}
       userChoices={preJoinChoices}
       options={{
@@ -135,7 +130,7 @@ export const RoomsDetailClient: FC<RoomsDetailProps> = (props) => {
       onSubmit={handlePreJoinSubmit.current}
       onError={handlePreJoinError.current}
       isLoading={loading}
-      isGuest
+      isGuest={props.isTesting}
     />
   )
 }

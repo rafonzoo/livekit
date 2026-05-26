@@ -1,6 +1,6 @@
 'use client'
 
-import type { FC } from 'react'
+import type { FC, ReactNode } from 'react'
 import type {
   RoomOptions,
   TrackPublishDefaults,
@@ -8,14 +8,15 @@ import type {
   VideoCodec,
 } from 'livekit-client'
 import type { LocalUserChoices } from '@livekit/components-react'
-import type { ConnectionDetails } from '@/feat/LiveKit/types'
+import type { ConnectionDetails } from '@/feat/Meeting/types'
 import { useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ConnectionState, MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
-import { formatChatMessageLinks, RoomContext } from '@livekit/components-react'
-import { VideoConferenceLive } from '@/feat/LiveKit/Conference/VideoConferenceLive'
+import { RoomContext } from '@livekit/components-react'
+import { RoomsLiveKit } from '@/feat/Meeting/Rooms/LiveKit'
 
-interface VideoConferenceProps {
+export interface RoomsConferenceProps {
+  children?: ReactNode
   userChoices: LocalUserChoices
   connectionDetails: ConnectionDetails
   options: {
@@ -25,7 +26,7 @@ interface VideoConferenceProps {
   }
 }
 
-export const VideoConference: FC<VideoConferenceProps> = (props) => {
+export const RoomsConference: FC<RoomsConferenceProps> = ({ children, ...props }) => {
   const propsRef = useRef(props)
   const params: { name: string } = useParams()
   const roomOptions = useRef((): RoomOptions => {
@@ -79,7 +80,6 @@ export const VideoConference: FC<VideoConferenceProps> = (props) => {
     currentRoom.on(RoomEvent.MediaDevicesError, error)
 
     currentRoom.on(RoomEvent.MediaDevicesError, (error) => {
-      console.log(error)
       const failure = MediaDeviceFailure.getFailure(error)
 
       if (failure === MediaDeviceFailure.PermissionDenied) {
@@ -110,18 +110,8 @@ export const VideoConference: FC<VideoConferenceProps> = (props) => {
   }, [])
 
   return (
-    <div data-lk-theme='default' className='fixed inset-0'>
-      <div className='lk-room-container'>
-        <RoomContext.Provider value={room.current}>
-          {/* <KeyboardShortcuts /> */}
-          <VideoConferenceLive
-            chatMessageFormatter={formatChatMessageLinks}
-            // SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
-          />
-          {/* <DebugMode />
-        <RecordingIndicator /> */}
-        </RoomContext.Provider>
-      </div>
-    </div>
+    <RoomContext.Provider value={room.current}>
+      <RoomsLiveKit>{children}</RoomsLiveKit>
+    </RoomContext.Provider>
   )
 }

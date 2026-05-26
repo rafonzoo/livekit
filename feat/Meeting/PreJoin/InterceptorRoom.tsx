@@ -1,8 +1,8 @@
 'use client'
 
 import type { FC } from 'react'
-import { X } from 'lucide-react'
-import { ConnectionInterceptor } from '@/feat/LiveKit/const'
+import { XIcon } from '@phosphor-icons/react'
+import { ConnectionInterceptor } from '@/feat/Meeting/enum'
 
 interface InterceptorRoomProps {
   interceptor: ConnectionInterceptor
@@ -42,7 +42,7 @@ export const InterceptorRoom: FC<InterceptorRoomProps> = ({
     <div className='relative flex h-full min-h-screen flex-col items-center justify-center'>
       <div className='w-[384px] max-w-full gap-2 px-3 text-center text-sm'>
         <span className='border-muted-foreground text-primary inline-block rounded-md border p-1.75'>
-          <X size={32} />
+          <XIcon size={32} />
         </span>
         <p className='text-primary text-lg font-semibold'>{title}</p>
         <p className='text-muted-foreground'>{description}</p>
