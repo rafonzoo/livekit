@@ -76,12 +76,12 @@ export function useParamsState<P extends Params = Params>() {
     screenCode,
     tabsCode,
 
-    // PanelState checks
+    // PanelCode checks
     isPanelOpen,
     isPanelSideOpen,
     isPanelActive,
 
-    // PanelState toggles
+    // PanelCode toggles
     togglePanel,
     closePanel,
     openPanel,

@@ -130,7 +130,8 @@ const Rooms: FC<RoomsProps> = (props) => {
       onSubmit={handlePreJoinSubmit.current}
       onError={handlePreJoinError.current}
       isLoading={loading}
-      isGuest={props.isTesting}
+      // isGuest={props.isTesting}
+      isGuest
     />
   )
 }

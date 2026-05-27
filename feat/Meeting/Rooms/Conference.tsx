@@ -10,9 +10,9 @@ import type {
 import type { LocalUserChoices } from '@livekit/components-react'
 import type { ConnectionDetails } from '@/feat/Meeting/types'
 import { useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
 import { ConnectionState, MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
 import { RoomContext } from '@livekit/components-react'
+import { useParamsState } from '@/hooks/use-params-state'
 import { RoomsLiveKit } from '@/feat/Meeting/Rooms/LiveKit'
 
 export interface RoomsConferenceProps {
@@ -28,7 +28,6 @@ export interface RoomsConferenceProps {
 
 export const RoomsConference: FC<RoomsConferenceProps> = ({ children, ...props }) => {
   const propsRef = useRef(props)
-  const params: { name: string } = useParams()
   const roomOptions = useRef((): RoomOptions => {
     const { current } = propsRef
     const videoCodec: VideoCodec | undefined = current.options.codec ?? 'vp9'
@@ -57,10 +56,10 @@ export const RoomsConference: FC<RoomsConferenceProps> = ({ children, ...props }
     }
   })
 
-  const router = useRouter()
   const room = useRef(new Room(roomOptions.current()))
+  const { params, goTo } = useParamsState<{ name: string }>()
   const roomEvent = useRef({
-    leave: () => router.push(`/?from=${params.name}`),
+    leave: () => goTo(params.name),
     error: (err: unknown) => {
       console.error(err)
 
