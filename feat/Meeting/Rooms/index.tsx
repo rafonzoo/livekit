@@ -1,145 +1,138 @@
 'use client'
 
-import type { FC, MouseEvent } from 'react'
-import type { RoomsConferenceProps } from '@/feat/Meeting/Rooms/Conference'
-import { Activity, useEffect, useRef, useState } from 'react'
-import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { ChatIcon, CopyIcon } from '@phosphor-icons/react'
-import { cn, num, qstring } from '@/lib/utils'
-import { TabsButton } from '@/feat/Meeting/Tabs'
-import { RoomsConference } from '@/feat/Meeting/Rooms/Conference'
-import { copyHandler } from '@/feat/Meeting/helpers'
-import { SearchParamsKey, LiveKitConfig } from '@/feat/Meeting/enum'
-import { RoomTabsCopy, RoomTabs } from '@/feat/Meeting/const'
-import {
-  HugeIcon,
-  AiMagicFreeIcons,
-  Settings02FreeIcons,
-  ToolsFreeIcons,
-  UserMultiple02FreeIcons,
-  Menu,
-} from '@/components/HugeIcon'
+import type { FC } from 'react'
+import type { VideoCodec } from 'livekit-client'
+import type { LocalUserChoices } from '@livekit/components-react'
+import type { ConnectionDetails } from '@/feat/Meeting/types'
+import type { LocalUserChoicesPassword } from '@/feat/Meeting/PreJoin/PreJoin'
+import { useEffect, useRef, useState } from 'react'
+import { RoomsToolbar } from '@/feat/Meeting/Rooms/Toolbar'
+import { PreJoin } from '@/feat/Meeting/PreJoin/PreJoin'
+import { InterceptorRoom } from '@/feat/Meeting/PreJoin/InterceptorRoom'
+import { ConnectionInterceptor } from '@/feat/Meeting/enum'
 
-export const Rooms: FC<RoomsConferenceProps> = (props) => {
-  const [mobileOpen, setMobileOpen] = useState(true)
-  const router = useRouter()
-  const pathname = usePathname()
-  const params = useParams<{ name: string }>()
-  const searchParams = useSearchParams()
-  const tab = num(searchParams.get(SearchParamsKey.Tabs))
-  const isOpen = num(searchParams.get(SearchParamsKey.TabsState))
-  const searchParamsObject = Object.fromEntries(searchParams)
+const LIVEKIT_CSS_ENABLE = true
 
-  const copyText = useRef((code: string) => {
-    return (e: MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault()
+const LIVEKIT_CSS_ID = 'livekit-style'
 
-      copyHandler(code)
+const LIVEKIT_CSS_PATH = '/lib/css/livekit.css'
+
+interface RoomsProps {
+  roomName: string
+  region?: string
+  hq: boolean
+  codec: VideoCodec
+  singlePeerConnection: boolean
+  isTesting?: boolean
+}
+
+const Rooms: FC<RoomsProps> = (props) => {
+  const [interceptor, setInterceptor] = useState<ConnectionInterceptor | null>(null)
+  const [isCSSLoaded, setIsCSSLoaded] = useState(!LIVEKIT_CSS_ENABLE)
+  const [loading, setLoading] = useState(false)
+  const [preJoinChoices, setPreJoinChoices] = useState<LocalUserChoices | undefined>()
+  const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails | undefined>()
+
+  // Reference
+  const preJoinDefaults = useRef({ username: '', audioEnabled: false, videoEnabled: false })
+  const connectionDetailsRef = useRef<ConnectionDetails | undefined>(undefined)
+  const isReady = !!connectionDetails && !!preJoinChoices
+  const handlePreJoinError = useRef((e: unknown) => console.error(e))
+  const handlePreJoinSubmit = useRef(async ({ password, ...values }: LocalUserChoicesPassword) => {
+    const url = new URL('/api/connection-details', window.location.origin)
+
+    url.searchParams.append('roomName', props.roomName)
+    url.searchParams.append('participantName', values.username)
+
+    setPreJoinChoices(values)
+    setLoading(true)
+
+    if (props.region) url.searchParams.append('region', props.region)
+    if (password) url.searchParams.append('password', password)
+
+    try {
+      const connectionDetailsResp = await fetch(url.toString())
+      const { interceptor, ...connectionDetailsData } =
+        (await connectionDetailsResp.json()) as ConnectionDetails & {
+          interceptor?: ConnectionInterceptor
+        }
+
+      if (interceptor) {
+        setInterceptor(interceptor)
+        connectionDetailsRef.current = connectionDetailsData
+      } else {
+        setConnectionDetails(connectionDetailsData)
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      setInterceptor(ConnectionInterceptor.Unknown)
+    } finally {
+      setLoading(false)
     }
   })
 
-  const copyIcon = useRef({
-    tools: () => <HugeIcon size={22} icon={ToolsFreeIcons} />,
-    multiple: () => <HugeIcon size={22} icon={UserMultiple02FreeIcons} />,
-    chat: () => <ChatIcon size={22} />,
-    magic: () => <HugeIcon size={22} icon={AiMagicFreeIcons} />,
-    settings: () => <HugeIcon size={22} icon={Settings02FreeIcons} />,
+  const handleBackToPrejoin = useRef(() => {
+    setInterceptor(null)
+    setPreJoinChoices(undefined)
   })
 
   useEffect(() => {
-    function showLeaveAlert(e: Event) {
-      if (window.location.origin.startsWith('https')) {
-        e.preventDefault()
+    if (!isReady) {
+      const livekitStyle = document.getElementById(LIVEKIT_CSS_ID)
+
+      if (!livekitStyle) {
+        return
+      }
+
+      document.head.removeChild(livekitStyle)
+    } else {
+      if (LIVEKIT_CSS_ENABLE) {
+        const livekitCss = document.createElement('link')
+
+        livekitCss.rel = 'stylesheet'
+        livekitCss.id = LIVEKIT_CSS_ID
+        livekitCss.href = window.location.origin + LIVEKIT_CSS_PATH
+        livekitCss.onload = () => {
+          setInterceptor(null) // Ready to live after css is fully loaded
+          setIsCSSLoaded(true)
+        }
+
+        document.head.appendChild(livekitCss)
       }
     }
+  }, [isReady])
 
-    window.addEventListener('beforeunload', showLeaveAlert)
+  useEffect(() => {
+    if (interceptor === ConnectionInterceptor.Waiting) {
+      const timeout = setTimeout(() => setConnectionDetails(connectionDetailsRef.current), 5_000)
 
-    return () => {
-      window.removeEventListener('beforeunload', showLeaveAlert)
+      return () => window.clearTimeout(timeout)
     }
-  }, [])
+  }, [interceptor])
 
-  return (
-    <RoomsConference {...props}>
-      <Activity mode='hidden'>
-        <div className='bg-background border-muted-foreground/40 *:bg-secondary fixed top-17 bottom-48 left-11 w-18 rounded-md border p-5 shadow *:size-8 *:rounded-[inherit]'>
-          <div></div>
-        </div>
-      </Activity>
-      <div className='flex items-center justify-between gap-3 xl:-mt-31 xl:px-5 xl:py-6'>
-        <div className={cn('grow text-sm', mobileOpen ? 'hidden xl:block' : 'block')}>
-          <button
-            type='submit'
-            className='text-primary bg-background border-primary hover:not-disabled:bg-primary/20 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border px-3 font-semibold disabled:opacity-40 xl:hidden'
-            onClick={copyText.current(params.name)}
-          >
-            <CopyIcon size={20} />
-            Salin kode
-          </button>
-          <div className='hidden flex-col gap-2 xl:flex'>
-            <p>Kode ruangan</p>
-            <div className='flex gap-2'>
-              <div className='flex h-9 w-50 cursor-text items-center rounded-md border px-3 shadow'>
-                {params.name}
-              </div>
-              <TabsButton
-                className='size-9'
-                title='Salin kode ruangan'
-                onClick={copyText.current(params.name)}
-              >
-                <CopyIcon size={20} />
-              </TabsButton>
-            </div>
-          </div>
-        </div>
-        <TabsButton
-          className='xl:hidden'
-          onClick={(e) => {
-            e.preventDefault()
-            setMobileOpen((prev) => !prev)
-          }}
-        >
-          <HugeIcon icon={Menu} size={22} />
-        </TabsButton>
-        <div
-          className={cn(
-            'flex grow gap-3 justify-self-stretch xl:flex xl:grow-0',
-            !mobileOpen && 'hidden'
-          )}
-        >
-          {RoomTabsCopy.map(({ id, icon, tabIds }) => (
-            <TabsButton
-              key={id}
-              isActive={tabIds.includes(tab) && !!isOpen}
-              className='w-full xl:w-10'
-              onClick={() => {
-                // const selectedTab = RoomTabs.find((tabs) => tabs.metaId === id)?.id ?? null
-                const selectedTab = RoomTabs.find((tabs) => tabIds.includes(tabs.id))?.id ?? null
-                const toggle = isOpen ? (tabIds.includes(tab) ? null : 1) : 1
+  if (interceptor) {
+    return <InterceptorRoom interceptor={interceptor} onClick={handleBackToPrejoin.current} />
+  }
 
-                router[LiveKitConfig.TabsPushMethod](
-                  qstring(
-                    pathname,
-                    {
-                      ...searchParamsObject,
-                      [SearchParamsKey.TabsState]: toggle,
-                      [SearchParamsKey.Tabs]: tab
-                        ? tabIds.includes(tab)
-                          ? tab
-                          : selectedTab
-                        : selectedTab,
-                    },
-                    { skipNulls: true }
-                  )
-                )
-              }}
-            >
-              {copyIcon.current[icon]()}
-            </TabsButton>
-          ))}
-        </div>
-      </div>
-    </RoomsConference>
+  return isReady && isCSSLoaded ? (
+    <RoomsToolbar
+      connectionDetails={connectionDetails}
+      userChoices={preJoinChoices}
+      options={{
+        codec: props.codec,
+        hq: props.hq,
+        singlePeerConnection: props.singlePeerConnection,
+      }}
+    />
+  ) : (
+    <PreJoin
+      defaults={{ ...preJoinDefaults.current, username: 'Rafa' }}
+      onSubmit={handlePreJoinSubmit.current}
+      onError={handlePreJoinError.current}
+      isLoading={loading}
+      isGuest={props.isTesting}
+    />
   )
 }
+
+export default Rooms

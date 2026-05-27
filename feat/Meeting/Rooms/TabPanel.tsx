@@ -2,25 +2,24 @@
 
 import type { ComponentProps, FC } from 'react'
 import { Activity } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { ConnectionState } from 'livekit-client'
 import { ArrowLeftIcon, XIcon } from '@phosphor-icons/react'
-import { cn, num, omit, qstring } from '@/lib/utils'
-import { SearchParamsKey, LiveKitConfig } from '@/feat/Meeting/enum'
+import { useConnectionState, useRoomContext } from '@livekit/components-react'
+import { cn } from '@/lib/utils'
+import { useParamsState } from '@/hooks/use-params-state'
 import { RoomTabsCopy, RoomTabs } from '@/feat/Meeting/const'
 
 export const RoomsTabPanel: FC<ComponentProps<'aside'>> = ({ className, children, ...props }) => {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const tab = num(searchParams.get(SearchParamsKey.Tabs))
-  const isOpen = num(searchParams.get(SearchParamsKey.TabsState))
-  const title = RoomTabsCopy.find((copy) => copy.tabIds.includes(tab))?.title ?? ''
-  const currentTab = RoomTabs.find(({ id }) => id === tab)
+  const { tabsCode, isPanelActive, openTab, closePanel } = useParamsState()
+  const room = useRoomContext()
+  const title = RoomTabsCopy.find((copy) => copy.tabIds.includes(tabsCode))?.title ?? ''
+  const currentTab = RoomTabs.find(({ id }) => id === tabsCode)
   const parentId = currentTab?.parentId
   const hasChild = !!parentId
-  const SubTabsComponent = currentTab?.content ?? (() => null)
+  const SubTabsComponent = currentTab?.content?.() ?? (() => null)
+  const state = useConnectionState(room)
 
-  if (!isOpen) {
+  if (state === ConnectionState.Connecting || !isPanelActive) {
     return null
   }
 
@@ -38,14 +37,7 @@ export const RoomsTabPanel: FC<ComponentProps<'aside'>> = ({ className, children
           {hasChild && (
             <button
               className='text-primary mr-1 flex size-6 cursor-pointer items-center justify-center hover:not-disabled:opacity-40'
-              onClick={() => {
-                router[LiveKitConfig.TabsPushMethod](
-                  qstring(pathname, {
-                    ...Object.fromEntries(searchParams),
-                    [SearchParamsKey.Tabs]: parentId,
-                  })
-                )
-              }}
+              onClick={() => openTab(parentId)}
             >
               <ArrowLeftIcon />
             </button>
@@ -56,13 +48,7 @@ export const RoomsTabPanel: FC<ComponentProps<'aside'>> = ({ className, children
           <button
             type='button'
             className='text-destructive inline-flex size-11 cursor-pointer items-center justify-center rounded-md bg-red-200 hover:bg-red-300'
-            onClick={() =>
-              router[LiveKitConfig.TabsPushMethod](
-                qstring(pathname, {
-                  ...omit(Object.fromEntries(searchParams), [SearchParamsKey.TabsState]),
-                })
-              )
-            }
+            onClick={closePanel}
           >
             <XIcon size={20} />
           </button>

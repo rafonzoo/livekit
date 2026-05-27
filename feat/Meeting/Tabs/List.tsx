@@ -3,7 +3,7 @@
 import type { ComponentProps, FC } from 'react'
 import { cn } from '@/lib/utils'
 
-export const TabsGroups: FC<ComponentProps<'div'>> = ({ className, ...props }) => {
+export const TabsListGroups: FC<ComponentProps<'div'>> = ({ className, ...props }) => {
   return <div data-slot='tabs-groups' {...props} className={cn('flex flex-col gap-2', className)} />
 }
 

@@ -1,8 +1,8 @@
 'use client'
 
 import type { ComponentProps, CSSProperties, FC, ReactNode } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { default as dynamic } from 'next/dynamic'
+import { ConnectionState } from 'livekit-client'
 import {
   HandIcon,
   MonitorPlayIcon,
@@ -24,12 +24,15 @@ import {
   CameraIcon,
   RoomAudioRenderer,
   useMaybeRoomContext,
+  useConnectionState,
+  useRoomContext,
 } from '@livekit/components-react'
-import { cn, num } from '@/lib/utils'
+import { setupDisconnectButton } from '@livekit/components-core'
+import { cn } from '@/lib/utils'
+import { useParamsState } from '@/hooks/use-params-state'
 import { useConferenceRoom, useMediaControls } from '@/hooks'
 import { RoomsTabPanel } from '@/feat/Meeting/Rooms/TabPanel'
 import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
-import { SearchParamsKey } from '@/feat/Meeting/enum'
 import { RoomTabs } from '@/feat/Meeting/const'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { ButtonIcon } from '@/components/Button'
@@ -44,9 +47,8 @@ const Whiteboard = dynamic(() => import('@/feat/Meeting/Addons/Whiteboard'), {
 })
 
 export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
-  // useMediaControls needs the live room so it can publish/toggle tracks.
-  // useMaybeRoomContext() is called here (inside the LiveKit tree) so it resolves correctly.
-  const room = useMaybeRoomContext()
+  const room = useRoomContext()
+  const { disconnect } = setupDisconnectButton(room)
   const {
     audioEnabled,
     videoEnabled,
@@ -86,13 +88,9 @@ export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
       <ButtonIcon isActive>
         <SmileyIcon weight='fill' size={24} />
       </ButtonIcon>
-      <ButtonIcon>
+      <ButtonIcon onClick={() => disconnect(true)}>
         <PhoneSlashIcon weight='fill' size={20} />
       </ButtonIcon>
-      {/*
-        EXPERIMENTAL: Testing autoplayback
-        <StartMediaButton />
-      */}
     </div>
   )
 }
@@ -100,36 +98,21 @@ export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
 export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, ...props }) => {
   const layoutContext = useCreateLayoutContext()
   const { tracks, focusTrack, carouselTracks } = useConferenceRoom({ layoutContext })
-
-  // UI
-  const searchParams = useSearchParams()
-  const tab = num(searchParams.get(SearchParamsKey.Tabs))
-  const isOpen = num(searchParams.get(SearchParamsKey.TabsState))
-  const currentTab = RoomTabs.find(({ id }) => tab === id)
-  const RoomsPanelContent = currentTab?.content ?? (() => null)
-  const isWhiteboardOpen = !!num(searchParams.get(SearchParamsKey.Whiteboard))
+  const { tabsCode, isPanelActive, isWhiteboard } = useParamsState()
+  const currentTab = RoomTabs.find(({ id }) => tabsCode === id)
+  const RoomsPanelContent = currentTab?.content?.() ?? (() => null)
+  const room = useMaybeRoomContext()
+  const state = useConnectionState(room)
 
   return (
     <LayoutContextProvider value={layoutContext}>
       <RoomAudioRenderer />
-      {/* {!!handRaises.length && (
-        <div className='bg-foreground text-background fixed top-5 right-10 left-10 z-10 h-6'>
-          {handRaises.map((targetParticipantId) => (
-            <button
-              key={targetParticipantId}
-              onClick={() => handleHandRaise({ action: 'lower_hand', targetParticipantId })}
-            >
-              {targetParticipantId}
-            </button>
-          ))}
-        </div>
-      )} */}
       <main {...props} className={cn('bg-secondary/40 fixed inset-0 p-3', className)}>
         <div className='flex h-full flex-col gap-3'>
           <div
             className={cn(
               '*:bg-background relative grid grow grid-cols-1 gap-3',
-              isOpen && 'xl:grid-cols-[1fr_25rem]'
+              isPanelActive && state !== ConnectionState.Connecting && 'xl:grid-cols-[1fr_25rem]'
             )}
           >
             <div
@@ -137,7 +120,7 @@ export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, 
               data-lk-theme='default'
               style={{ '--lk-control-bar-height': '0px' } as CSSProperties}
             >
-              <div className={cn(!isWhiteboardOpen ? 'hidden' : void 0)}>
+              <div className={cn(!isWhiteboard ? 'hidden' : void 0)}>
                 <Whiteboard />
               </div>
               <div className='absolute inset-0 *:h-full *:w-full'>
@@ -169,16 +152,13 @@ export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, 
               <RoomsPanelContent />
             </RoomsTabPanel>
           </div>
-          <RoomsControl>
-            <ButtonIcon
-              isActive
-              // onClick={() =>
-              //   handleHandRaise({ action: 'hand_raise', participantId: room.localParticipant.sid })
-              // }
-            >
-              <HandIcon weight='fill' size={20} />
-            </ButtonIcon>
-          </RoomsControl>
+          {state !== ConnectionState.Connecting && (
+            <RoomsControl>
+              <ButtonIcon isActive>
+                <HandIcon weight='fill' size={20} />
+              </ButtonIcon>
+            </RoomsControl>
+          )}
           {children}
         </div>
       </main>

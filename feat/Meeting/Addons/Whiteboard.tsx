@@ -1,18 +1,31 @@
 'use client'
 
-import type { Editor, TLComponents, TLRecord, RecordsDiff } from 'tldraw'
-import type { FC } from 'react'
-import type { LiveKitChannelAction } from '@/feat/Meeting/enum'
-import { useEffect, useEffectEvent, useRef, useCallback } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import type { Editor, RecordsDiff, TLComponents, TLRecord } from 'tldraw'
+import { useEffect, useEffectEvent, useRef } from 'react'
 import { DefaultColorStyle, Tldraw } from 'tldraw'
 import { RoomEvent } from 'livekit-client'
 import { useRoomContext } from '@livekit/components-react'
-import { omit, qstring } from '@/lib/utils'
-import { LiveKitChannelTopic, LiveKitConfig, SearchParamsKey } from '@/feat/Meeting/enum'
+import { useParamsState } from '@/hooks/use-params-state'
+import { LiveKitAction } from '@/feat/Meeting/enum'
+
 import 'tldraw/tldraw.css'
 
-const whiteboardConfig: TLComponents = {
+type WhiteboardMessage =
+  | {
+      action: LiveKitAction.WhiteboardRequest
+    }
+  | {
+      action: LiveKitAction.WhiteboardClose
+    }
+  | {
+      action: LiveKitAction.WhiteboardUpdate
+      payload: RecordsDiff<TLRecord>
+    }
+
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+
+const components: TLComponents = {
   MainMenu: null,
   PageMenu: null,
   NavigationPanel: null,
@@ -21,119 +34,190 @@ const whiteboardConfig: TLComponents = {
   SharePanel: null,
 }
 
-export const Whiteboard: FC = () => {
+export const Whiteboard = () => {
   const room = useRoomContext()
   const editorRef = useRef<Editor | null>(null)
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const { openWhiteboard, closeScreen } = useParamsState()
 
-  const openWhiteboard = useEffectEvent((payload: Uint8Array) => {
+  /**
+   * Prevent rebroadcast loop
+   */
+  const isRemoteApplyingRef = useRef(false)
+
+  /**
+   * Queue scheduler flag
+   */
+  const flushScheduledRef = useRef(false)
+
+  /**
+   * Coalesced updates
+   */
+  const addedRef = useRef<Record<string, TLRecord>>({})
+
+  /**
+   * Flush and scheduled updates
+   */
+  const updatedRef = useRef<Record<string, TLRecord>>({})
+  const removedRef = useRef<Set<string>>(new Set())
+  const flushRef = useRef<() => void>(null)
+  const scheduleFlushRef = useRef<() => void>(null)
+  const unsubscribeRef = useRef<(() => void) | null>(null)
+
+  const handleDataReceived = useEffectEvent((payload: Uint8Array) => {
     try {
-      const message = JSON.parse(new TextDecoder().decode(payload)) as {
-        action: LiveKitChannelAction
-      }
+      const message = JSON.parse(decoder.decode(payload)) as WhiteboardMessage
 
-      if (message.action === 'WHITEBOARD_REQUEST') {
-        router[LiveKitConfig.TabsPushMethod](
-          qstring(pathname, {
-            ...Object.fromEntries(searchParams),
-            [SearchParamsKey.Whiteboard]: 1,
-          })
-        )
-      }
+      switch (message.action) {
+        case LiveKitAction.WhiteboardRequest: {
+          return openWhiteboard()
+        }
 
-      if (message.action === 'WHITEBOARD_CLOSE') {
-        router[LiveKitConfig.TabsPushMethod](
-          qstring(pathname, {
-            ...omit(Object.fromEntries(searchParams), [SearchParamsKey.Whiteboard]),
-          })
-        )
-      }
-    } catch (err) {
-      console.error('Failed to open whiteboard:', err)
-    }
-  })
+        case LiveKitAction.WhiteboardClose: {
+          return closeScreen()
+        }
 
-  const updateWhiteboard = useEffectEvent((payload: Uint8Array) => {
-    try {
-      const editor = editorRef.current
-      const decoder = new TextDecoder()
-      const message = JSON.parse(decoder.decode(payload)) as {
-        action: LiveKitChannelAction
-        payload: object
-      }
-
-      if (message.action === 'WHITEBOARD_UPDATE') {
-        editorRef.current?.store.mergeRemoteChanges(() => {
+        case LiveKitAction.WhiteboardUpdate: {
           const { added, updated, removed } = message.payload
 
-          // // 1. Jika ada objek baru atau objek yang di-redo (muncul kembali)
-          // if (Object.keys(added).length > 0) {
-          //   editor.store.put(Object.values(added))
-          // }
-
-          // 2. Jika ada objek yang bergeser/berubah warna
-          if (Object.keys(updated).length > 0) {
-            // updated berisi array [before, after], kita ambil data 'after' (index 1)
-            const updatedRecords = Object.values(updated).map(([, after]) => after)
-            editor.store.put(updatedRecords)
-            console.log(updatedRecords)
+          /**
+           * Coalesce added
+           */
+          for (const id in added) {
+            addedRef.current[id] = added[id as keyof typeof added]
           }
 
-          // // 3. Jika ada objek yang di-undo (dihapus dari kanvas)
-          // if (Object.keys(removed).length > 0) {
-          //   editor.store.remove(Object.keys(removed))
-          // }
-        })
+          /**
+           * Keep latest update only
+           */
+          for (const id in updated) {
+            updatedRef.current[id] = updated[id as keyof typeof updated][1]
+          }
+
+          /**
+           * Coalesce removed
+           */
+          for (const id in removed) {
+            removedRef.current.add(id)
+          }
+
+          scheduleFlushRef.current?.()
+
+          return
+        }
       }
     } catch (err) {
-      console.error('Failed to update whiteboard:', err)
+      console.error('Whiteboard sync error:', err)
     }
   })
 
+  const handleOnmount = (editor: Editor) => {
+    editorRef.current = editor
+
+    DefaultColorStyle.setDefaultValue('red')
+    editor.setCurrentTool('draw')
+
+    unsubscribeRef.current = editor.store.listen(
+      ({ changes, source }) => {
+        /**
+         * Prevent echo
+         */
+        if (isRemoteApplyingRef.current) {
+          return
+        }
+
+        /**
+         * Ignore non-user changes
+         */
+        if (source !== 'user') {
+          return
+        }
+
+        const message: WhiteboardMessage = {
+          action: LiveKitAction.WhiteboardUpdate,
+          payload: changes,
+        }
+
+        room.localParticipant.publishData(encoder.encode(JSON.stringify(message)), {
+          reliable: false,
+        })
+      },
+      {
+        scope: 'document',
+      }
+    )
+  }
+
   useEffect(() => {
-    room.on(RoomEvent.DataReceived, openWhiteboard)
-    room.on(RoomEvent.DataReceived, updateWhiteboard)
+    flushRef.current ??= () => {
+      flushScheduledRef.current = false
+
+      const editor = editorRef.current
+
+      if (!editor) return
+
+      const added = Object.values(addedRef.current)
+      const updated = Object.values(updatedRef.current)
+      const removed = Array.from(removedRef.current)
+
+      if (added.length === 0 && updated.length === 0 && removed.length === 0) {
+        return
+      }
+
+      addedRef.current = {}
+      updatedRef.current = {}
+      removedRef.current.clear()
+
+      isRemoteApplyingRef.current = true
+      editor.store.mergeRemoteChanges(() => {
+        /**
+         * Single put operation
+         */
+        if (added.length || updated.length) {
+          editor.store.put([...added, ...updated])
+        }
+
+        /**
+         * Single remove operation
+         */
+        if (removed.length) {
+          editor.store.remove(removed as never)
+        }
+      })
+
+      isRemoteApplyingRef.current = false
+    }
+
+    scheduleFlushRef.current ??= () => {
+      if (flushScheduledRef.current) return
+
+      flushScheduledRef.current = true
+
+      /**
+       * Faster than RAF for small bursts
+       */
+      queueMicrotask(() => {
+        flushRef.current?.()
+      })
+    }
 
     return () => {
-      room.off(RoomEvent.DataReceived, openWhiteboard)
-      room.off(RoomEvent.DataReceived, updateWhiteboard)
+      unsubscribeRef.current?.()
+    }
+  }, [])
+
+  useEffect(() => {
+    room.on(RoomEvent.DataReceived, handleDataReceived)
+
+    return () => {
+      room.off(RoomEvent.DataReceived, handleDataReceived)
     }
   }, [room])
 
   return (
-    <div className='absolute inset-0 z-5 overflow-hidden rounded-md ring-4 ring-blue-500 [&_.tl-background]:bg-transparent! [&_.tl-watermark\_SEE-LICENSE]:invisible [&_.tlui-style-panel__section:not(:first-child)]:hidden'>
+    <div className='absolute inset-0 z-5 overflow-hidden rounded-md ring-4 ring-blue-500 [&_.tl-watermark\_SEE-LICENSE]:hidden!'>
       <Tldraw
-        components={whiteboardConfig}
-        onMount={(editor) => {
-          editorRef.current = editor
-
-          DefaultColorStyle.setDefaultValue('red')
-          editor.setCurrentTool('draw')
-
-          editor.store.listen(
-            ({ changes }) => {
-              const hasChanges =
-                Object.keys(changes.added).length > 0 ||
-                Object.keys(changes.updated).length > 0 ||
-                Object.keys(changes.removed).length > 0
-
-              if (!hasChanges) return
-
-              const message = JSON.stringify({
-                action: 'WHITEBOARD_UPDATE',
-                payload: changes, // Kirim struktur added, updated, dan removed
-              })
-
-              const encoder = new TextEncoder()
-              const data = encoder.encode(message)
-
-              room.localParticipant.publishData(data, { reliable: true })
-            },
-            { scope: 'document' }
-          )
-        }}
+        components={components}
+        onMount={handleOnmount}
         overrides={{
           tools(_, tools) {
             delete tools.note
