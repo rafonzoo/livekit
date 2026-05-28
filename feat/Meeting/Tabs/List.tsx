@@ -3,7 +3,7 @@
 import type { ComponentProps, FC } from 'react'
 import { cn } from '@/lib/utils'
 
-export const TabsGroups: FC<ComponentProps<'div'>> = ({ className, ...props }) => {
+export const TabsListGroups: FC<ComponentProps<'div'>> = ({ className, ...props }) => {
   return <div data-slot='tabs-groups' {...props} className={cn('flex flex-col gap-2', className)} />
 }
 
@@ -105,7 +105,27 @@ export const TabsListItemActionStart: FC<ComponentProps<'button'>> = ({
       {...props}
       onClick={(e) => onClick?.(e)}
       className={cn(
-        'border-primary bg-primary/10 text-primary hover:bg-primary/20 inline-flex h-8 items-center justify-center rounded-md border px-2.5 font-semibold hover:not-disabled:cursor-pointer',
+        'border-primary bg-primary/10 text-primary hover:bg-primary/20 inline-flex h-8 items-center justify-center rounded-md border px-2.5 font-semibold hover:not-disabled:cursor-pointer disabled:opacity-40',
+        !props.disabled && 'cursor-pointer',
+        className
+      )}
+    />
+  )
+}
+
+export const TabsListItemActionRecord: FC<ComponentProps<'button'>> = ({
+  className,
+  onClick,
+  ...props
+}) => {
+  return (
+    <button
+      data-slot='tabs-list-item-action-record'
+      type='button'
+      {...props}
+      onClick={(e) => onClick?.(e)}
+      className={cn(
+        'border-destructive text-destructive rounded-full',
         !props.disabled && 'cursor-pointer',
         className
       )}

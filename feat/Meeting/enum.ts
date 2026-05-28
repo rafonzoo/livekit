@@ -1,5 +1,13 @@
-export enum LiveKitConfig {
-  TabsPushMethod = 'replace',
+export enum LiveKitAction {
+  WhiteboardRequest = 'WHITEBOARD_REQUEST',
+  WhiteboardClose = 'WHITEBOARD_CLOSE',
+  WhiteboardUpdate = 'WHITEBOARD_UPDATE',
+}
+
+export enum ParticipantAttribute {
+  ScreenRecord = 'SCREEN_RECORD',
+  ScreenActive = 'SCREEN_ACTIVE',
+  ScreenActiveHost = 'SCREEN_ACTIVE_HOST',
 }
 
 export enum ConnectionInterceptor {
@@ -10,6 +18,47 @@ export enum ConnectionInterceptor {
 }
 
 export enum SearchParamsKey {
-  Tabs = 'tab',
-  TabsState = 'io',
+  TabsCode = 'tc',
+  PanelCode = 'pc',
+  ScreenCode = 'sc',
+}
+
+export enum PanelCode {
+  Open = 1,
+  SideOpen = 2,
+}
+
+export enum ScreenCode {
+  Recording = 1,
+  Whiteboard = 2,
+  Presentation = 3,
+  WatchYoutube = 4,
+}
+
+export enum TabsCode {
+  TabsMeeting = 1,
+  TabsMeetingSharedNotes = 11,
+  TabsMeetingPolling = 12,
+  TabsMeetingWatchYoutube = 13,
+  TabsParticipant = 2,
+  TabsChats = 3,
+  TabsPersonalize = 4,
+  TabsSettings = 5,
+}
+
+export enum GroupsCode {
+  Collaboration = 1,
+  Content = 2,
+  Media = 3,
+  Admin = 4,
+}
+
+export enum GroupCode {
+  ShareNote = 1,
+  Polling = 2,
+  Whiteboard = 3,
+  Presentation = 4,
+  WatchYoutube = 5,
+  Recording = 6,
+  PickRandom = 7,
 }

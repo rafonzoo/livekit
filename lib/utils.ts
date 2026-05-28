@@ -123,7 +123,8 @@ export function qstring<T extends object = object>(
 
   // Process the object into key-value pairs
   const pairs: string[] = []
-  const url = baseUrl.endsWith('/') ? baseUrl.slice(0, baseUrl.length - 1) : baseUrl
+  const url =
+    baseUrl !== '/' && baseUrl.endsWith('/') ? baseUrl.slice(0, baseUrl.length - 1) : baseUrl
 
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -171,4 +172,11 @@ export function qstring<T extends object = object>(
 
   // Join all pairs and prepend with '?'
   return url + (pairs.length > 0 ? `?${pairs.join('&')}` : '')
+}
+
+export function loginfo(...data: unknown[]) {
+  if (typeof window === 'undefined') return console.log(...data)
+  if (!window.location.protocol.startsWith('https')) {
+    return console.info(...data)
+  }
 }

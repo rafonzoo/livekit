@@ -1,5 +1,9 @@
 export * from '@/feat/Meeting/Tabs/Button'
 
+export * from '@/feat/Meeting/Tabs/Icon'
+
+export * from '@/feat/Meeting/Tabs/List'
+
 export * from '@/feat/Meeting/Tabs/Chat'
 
 export * from '@/feat/Meeting/Tabs/Meeting'

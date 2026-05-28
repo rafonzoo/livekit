@@ -25,7 +25,7 @@ export interface ConnectionDetails {
 
 export interface TabProps {
   id: number
-  content: FC
+  content: () => FC
   hide: boolean
   parentId?: number
   description?: string
