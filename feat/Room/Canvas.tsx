@@ -2,8 +2,8 @@
 
 import type { FC } from 'react'
 import { cn } from '@/lib/utils'
-import { useRoomState } from '@/feat/Meeting/Room/State'
-import { ScreenCode } from '@/feat/Meeting/enum'
+import { useRoomState } from '@/feat/Room/State'
+import { ScreenCode } from '@/feat/enum'
 
 export const RoomCanvas: FC = () => {
   const { screen } = useRoomState()

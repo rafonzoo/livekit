@@ -1,7 +1,7 @@
 'use client'
 
 import type { FC } from 'react'
-import type { TabsContentIconKey, TabsRoomToolsIconKey } from '@/feat/Meeting/const'
+import type { TabsContentIconKey, TabsRoomToolsIconKey } from '@/feat/const'
 import {
   ChatIcon,
   DiceSixIcon,

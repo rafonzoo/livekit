@@ -17,7 +17,7 @@ import {
   TabsListItemActionStart,
   TabsMeetingIcon,
   TabsListItemActionRecord,
-} from '@/feat/Meeting/Tabs'
+} from '@/feat/Tabs'
 
 export const TabsMeeting: FC = () => {
   const { activeScreen, items } = useTabsMeeting()

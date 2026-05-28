@@ -3,13 +3,13 @@
 import type { FC } from 'react'
 import type { VideoCodec } from 'livekit-client'
 import type { LocalUserChoices } from '@livekit/components-react'
-import type { ConnectionDetails } from '@/feat/Meeting/types'
-import type { LocalUserChoicesPassword } from '@/feat/Meeting/PreJoin/PreJoin'
+import type { ConnectionDetails } from '@/feat/types'
+import type { LocalUserChoicesPassword } from '@/feat/PreJoin/PreJoin'
 import { useEffect, useRef, useState } from 'react'
-import { RoomContent, RoomConference } from '@/feat/Meeting/Room'
-import { PreJoin } from '@/feat/Meeting/PreJoin/PreJoin'
-import { InterceptorRoom } from '@/feat/Meeting/PreJoin/Interceptor'
-import { ConnectionInterceptor } from '@/feat/Meeting/enum'
+import { RoomContent, RoomConference } from '@/feat/Room'
+import { PreJoin } from '@/feat/PreJoin/PreJoin'
+import { InterceptorRoom } from '@/feat/PreJoin/Interceptor'
+import { ConnectionInterceptor } from '@/feat/enum'
 
 const LIVEKIT_CSS_ENABLE = true
 

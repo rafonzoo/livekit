@@ -8,12 +8,12 @@ import type {
   VideoCodec,
 } from 'livekit-client'
 import type { LocalUserChoices } from '@livekit/components-react'
-import type { ConnectionDetails } from '@/feat/Meeting/types'
+import type { ConnectionDetails } from '@/feat/types'
 import { useEffect, useRef } from 'react'
 import { MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
 import { RoomContext } from '@livekit/components-react'
 import { useParamsState } from '@/hooks'
-import { RoomState, RoomLayout } from '@/feat/Meeting/Room'
+import { RoomState, RoomLayout } from '@/feat/Room'
 
 export interface RoomConferenceProps {
   children?: ReactNode

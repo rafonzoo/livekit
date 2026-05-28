@@ -6,7 +6,7 @@ import { DefaultColorStyle, Tldraw } from 'tldraw'
 import { RoomEvent } from 'livekit-client'
 import { useRoomContext } from '@livekit/components-react'
 import { useParamsState } from '@/hooks'
-import { LiveKitAction } from '@/feat/Meeting/enum'
+import { LiveKitAction } from '@/feat/enum'
 
 import 'tldraw/tldraw.css'
 

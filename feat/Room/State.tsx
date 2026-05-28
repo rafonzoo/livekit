@@ -2,12 +2,12 @@
 
 import type { FC, ReactNode } from 'react'
 import type { RemoteParticipant } from 'livekit-client'
-import type { ScreenCode } from '@/feat/Meeting/enum'
+import type { ScreenCode } from '@/feat/enum'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { ConnectionState, RoomEvent } from 'livekit-client'
 import { useMaybeRoomContext } from '@livekit/components-react'
 import { loginfo, num } from '@/lib/utils'
-import { ParticipantAttribute } from '@/feat/Meeting/enum'
+import { ParticipantAttribute } from '@/feat/enum'
 
 type ScreenID = Exclude<ScreenCode, ScreenCode.Recording>
 

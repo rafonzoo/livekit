@@ -1,7 +1,7 @@
 import type { Params } from 'next/dist/server/request/params'
 import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation'
 import { num, omit, qstring } from '@/lib/utils'
-import { SearchParamsKey, PanelCode, ScreenCode, TabsCode } from '@/feat/Meeting/enum'
+import { SearchParamsKey, PanelCode, ScreenCode, TabsCode } from '@/feat/enum'
 
 export function useParamsState<P extends Params = Params>() {
   const router = useRouter()

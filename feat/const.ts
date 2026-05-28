@@ -1,15 +1,9 @@
-import type { TabProps } from '@/feat/Meeting/types'
-import {
-  TabsChats,
-  TabsMeeting,
-  TabsParticipant,
-  TabsPersonalize,
-  TabsSettings,
-} from '@/feat/Meeting/Tabs'
-import { GroupCode, GroupsCode } from '@/feat/Meeting/enum'
-import { WatchYoutube } from '@/feat/Meeting/Addons/WatchYoutube'
-import { SharedNotes } from '@/feat/Meeting/Addons/SharedNotes'
-import { Polling } from '@/feat/Meeting/Addons/Polling'
+import type { TabProps } from '@/feat/types'
+import { TabsChats, TabsMeeting, TabsParticipant, TabsPersonalize, TabsSettings } from '@/feat/Tabs'
+import { GroupCode, GroupsCode } from '@/feat/enum'
+import { WatchYoutube } from '@/feat/Collab/WatchYoutube'
+import { SharedNotes } from '@/feat/Collab/SharedNotes'
+import { Polling } from '@/feat/Collab/Polling'
 
 export const RoomTabs = [
   {

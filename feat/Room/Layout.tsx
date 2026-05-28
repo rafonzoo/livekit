@@ -17,11 +17,11 @@ import {
 } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
 import { useParamsState, useConferenceRoom } from '@/hooks'
-import { RoomToastInfo, RoomTabPanel, RoomControl, RoomCanvas } from '@/feat/Meeting/Room'
-import { RoomTabs } from '@/feat/Meeting/const'
+import { RoomToastInfo, RoomTabPanel, RoomControl, RoomCanvas } from '@/feat/Room'
+import { RoomTabs } from '@/feat/const'
 import { ButtonIcon } from '@/components/Button'
 
-// const Whiteboard = dynamic(() => import('@/feat/Meeting/Addons/Whiteboard'), {
+// const Whiteboard = dynamic(() => import('@/feat/Addons/Whiteboard'), {
 //   ssr: false,
 //   loading: () => (
 //     <div className='bg-background text-muted-foreground absolute inset-0 z-5 flex items-center justify-center overflow-hidden rounded-md text-sm'>

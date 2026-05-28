@@ -1,8 +1,8 @@
-import type { TabsContentList } from '@/feat/Meeting/const'
+import type { TabsContentList } from '@/feat/const'
 import { useParamsState } from '@/hooks'
-import { useRoomState } from '@/feat/Meeting/Room'
-import { GroupCode, ScreenCode } from '@/feat/Meeting/enum'
-import { TabsContents } from '@/feat/Meeting/const'
+import { useRoomState } from '@/feat/Room'
+import { GroupCode, ScreenCode } from '@/feat/enum'
+import { TabsContents } from '@/feat/const'
 
 export function useTabsMeeting() {
   const { screen, record, startRecording, stopRecording, startActiveScreen, stopActiveScreen } =

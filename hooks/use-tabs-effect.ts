@@ -1,8 +1,8 @@
 import { useEffect, useEffectEvent } from 'react'
 import { omit, qstring } from '@/lib/utils'
 import { useParamsState } from '@/hooks'
-import { SearchParamsKey } from '@/feat/Meeting/enum'
-import { RoomTabs } from '@/feat/Meeting/const'
+import { SearchParamsKey } from '@/feat/enum'
+import { RoomTabs } from '@/feat/const'
 
 export function useTabEffect() {
   const { router, tabsCode, pathname, currentParams, isWhiteboard, closeScreen } = useParamsState()

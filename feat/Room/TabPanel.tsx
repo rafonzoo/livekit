@@ -7,7 +7,7 @@ import { ArrowLeftIcon, XIcon } from '@phosphor-icons/react'
 import { useConnectionState, useRoomContext } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
 import { useParamsState } from '@/hooks'
-import { RoomTabsTools, RoomTabs } from '@/feat/Meeting/const'
+import { RoomTabsTools, RoomTabs } from '@/feat/const'
 
 export const RoomTabPanel: FC<ComponentProps<'aside'>> = ({ className, children, ...props }) => {
   const { tabsCode, isPanelActive, openTab, closePanel } = useParamsState()
