@@ -1,5 +1,5 @@
 import { isVideoCodec } from '@/feat/Meeting/helpers'
-import { Rooms } from '@/app/rooms/[name]/client'
+import { RoomsDetail } from '@/app/rooms/[name]/client'
 
 interface RoomsDetailPageProps {
   params: Promise<{ name: string }>
@@ -16,7 +16,7 @@ export default async function RoomsDetailPage(props: RoomsDetailPageProps) {
   const seachParams = await props.searchParams
 
   return (
-    <Rooms
+    <RoomsDetail
       roomName={params.name}
       region={seachParams.region}
       hq={seachParams.hq === 'true'}

@@ -173,3 +173,10 @@ export function qstring<T extends object = object>(
   // Join all pairs and prepend with '?'
   return url + (pairs.length > 0 ? `?${pairs.join('&')}` : '')
 }
+
+export function loginfo(...data: unknown[]) {
+  if (typeof window === 'undefined') return console.log(...data)
+  if (!window.location.protocol.startsWith('https')) {
+    return console.info(...data)
+  }
+}

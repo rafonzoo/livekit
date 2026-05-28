@@ -9,15 +9,15 @@ import {
   CameraIcon,
   useRoomContext,
 } from '@livekit/components-react'
-import { setupDisconnectButton } from '@livekit/components-core'
+import { useParamsState } from '@/hooks'
 import { useMediaControls } from '@/hooks'
-import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
+import { ToggleTrack } from '@/components/ToggleTrack'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { ButtonIcon } from '@/components/Button'
 
-export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
+export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
   const room = useRoomContext()
-  const { disconnect } = setupDisconnectButton(room)
+  const { router } = useParamsState()
   const {
     audioEnabled,
     videoEnabled,
@@ -57,12 +57,7 @@ export const RoomsControl: FC<{ children?: ReactNode }> = ({ children }) => {
       <ButtonIcon isActive>
         <SmileyIcon weight='fill' size={24} />
       </ButtonIcon>
-      <ButtonIcon
-        onClick={(e) => {
-          disconnect(true)
-          e.currentTarget.disabled = true
-        }}
-      >
+      <ButtonIcon onClick={() => router.replace('/')}>
         <PhoneSlashIcon weight='fill' size={20} />
       </ButtonIcon>
     </div>

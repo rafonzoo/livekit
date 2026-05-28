@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from 'react'
 import { omit, qstring } from '@/lib/utils'
-import { useParamsState } from '@/hooks/use-params-state'
+import { useParamsState } from '@/hooks'
 import { SearchParamsKey } from '@/feat/Meeting/enum'
 import { RoomTabs } from '@/feat/Meeting/const'
 

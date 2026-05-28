@@ -6,13 +6,13 @@ import { ConnectionState } from 'livekit-client'
 import { ArrowLeftIcon, XIcon } from '@phosphor-icons/react'
 import { useConnectionState, useRoomContext } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
-import { useParamsState } from '@/hooks/use-params-state'
-import { RoomTabsCopy, RoomTabs } from '@/feat/Meeting/const'
+import { useParamsState } from '@/hooks'
+import { RoomTabsTools, RoomTabs } from '@/feat/Meeting/const'
 
-export const RoomsTabPanel: FC<ComponentProps<'aside'>> = ({ className, children, ...props }) => {
+export const RoomTabPanel: FC<ComponentProps<'aside'>> = ({ className, children, ...props }) => {
   const { tabsCode, isPanelActive, openTab, closePanel } = useParamsState()
   const room = useRoomContext()
-  const title = RoomTabsCopy.find((copy) => copy.tabIds.includes(tabsCode))?.title ?? ''
+  const title = RoomTabsTools.find((copy) => copy.tabIds.includes(tabsCode))?.title ?? ''
   const currentTab = RoomTabs.find(({ id }) => id === tabsCode)
   const parentId = currentTab?.parentId
   const hasChild = !!parentId

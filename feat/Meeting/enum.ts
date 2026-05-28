@@ -4,6 +4,12 @@ export enum LiveKitAction {
   WhiteboardUpdate = 'WHITEBOARD_UPDATE',
 }
 
+export enum ParticipantAttribute {
+  ScreenRecord = 'SCREEN_RECORD',
+  ScreenActive = 'SCREEN_ACTIVE',
+  ScreenActiveHost = 'SCREEN_ACTIVE_HOST',
+}
+
 export enum ConnectionInterceptor {
   Unknown = 'unknown',
   Blocked = 'blocked',
@@ -23,9 +29,10 @@ export enum PanelCode {
 }
 
 export enum ScreenCode {
-  Whiteboard = 1,
-  Presentation = 2,
-  WatchYoutube = 3,
+  Recording = 1,
+  Whiteboard = 2,
+  Presentation = 3,
+  WatchYoutube = 4,
 }
 
 export enum TabsCode {
@@ -37,4 +44,21 @@ export enum TabsCode {
   TabsChats = 3,
   TabsPersonalize = 4,
   TabsSettings = 5,
+}
+
+export enum GroupsCode {
+  Collaboration = 1,
+  Content = 2,
+  Media = 3,
+  Admin = 4,
+}
+
+export enum GroupCode {
+  ShareNote = 1,
+  Polling = 2,
+  Whiteboard = 3,
+  Presentation = 4,
+  WatchYoutube = 5,
+  Recording = 6,
+  PickRandom = 7,
 }

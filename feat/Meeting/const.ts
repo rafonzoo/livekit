@@ -6,6 +6,7 @@ import {
   TabsPersonalize,
   TabsSettings,
 } from '@/feat/Meeting/Tabs'
+import { GroupCode, GroupsCode } from '@/feat/Meeting/enum'
 import { WatchYoutube } from '@/feat/Meeting/Addons/WatchYoutube'
 import { SharedNotes } from '@/feat/Meeting/Addons/SharedNotes'
 import { Polling } from '@/feat/Meeting/Addons/Polling'
@@ -61,7 +62,7 @@ export const RoomTabs = [
   },
 ] satisfies TabProps[]
 
-export const RoomTabsCopy = [
+export const RoomTabsTools = [
   {
     id: 1,
     title: 'Perangkat rapat',
@@ -96,26 +97,26 @@ export const RoomTabsCopy = [
 
 export const TabsContents = [
   {
-    id: 1,
+    id: GroupsCode.Collaboration,
     headline: 'Kolaborasi',
     hide: false,
     lists: [
       {
-        id: 'share-note' as const,
+        id: GroupCode.ShareNote,
         icon: 'phosphor/notebook' as const,
         title: 'Berbagi catatan',
         description: 'Mencatat bersama - sama secara langsung',
         hide: false,
       },
       {
-        id: 'polling' as const,
+        id: GroupCode.Polling,
         icon: 'hugeicons/anaytics-01' as const,
         title: 'Jajak pendapat',
         description: 'Buat & kelola jajak pendapat',
         hide: false,
       },
       {
-        id: 'whiteboard' as const,
+        id: GroupCode.Whiteboard,
         icon: 'phosphor/presentation' as const,
         title: 'Papan tulis',
         description: 'Kanvas menggambar kolaboratif',
@@ -124,12 +125,12 @@ export const TabsContents = [
     ],
   },
   {
-    id: 2,
+    id: GroupsCode.Content,
     headline: 'Konten',
     hide: false,
     lists: [
       {
-        id: 'presentation' as const,
+        id: GroupCode.Presentation,
         icon: 'phosphor/projector-screen-chart' as const,
         title: 'Presentasi',
         description: 'Lihat berkas presentasi yang diunggah',
@@ -138,12 +139,12 @@ export const TabsContents = [
     ],
   },
   {
-    id: 3,
+    id: GroupsCode.Media,
     headline: 'Media',
     hide: false,
     lists: [
       {
-        id: 'watch-youtube' as const,
+        id: GroupCode.WatchYoutube,
         icon: 'phosphor/youtube-logo' as const,
         title: 'Berbagi video online ke pihak luar',
         description: 'Tonton video YouTube bersama',
@@ -152,19 +153,19 @@ export const TabsContents = [
     ],
   },
   {
-    id: 4,
+    id: GroupsCode.Admin,
     headline: 'Admin',
     hide: false,
     lists: [
       {
-        id: 'recording' as const,
+        id: GroupCode.Recording,
         icon: 'hugeicons/live-streaming-03' as const,
         title: 'Mulai rekam rapat',
         description: 'Rekam rapat sekarang',
         hide: false,
       },
       {
-        id: 'pick-random' as const,
+        id: GroupCode.PickRandom,
         icon: 'phosphor/dice-six' as const,
         title: 'Pilih peserta acak',
         description: 'Pilih peserta secara acak',
@@ -174,6 +175,10 @@ export const TabsContents = [
   },
 ]
 
+export type TabsRoomToolsIconKey = (typeof RoomTabsTools)[number]['icon']
+
 export type TabsContentIconKey = (typeof TabsContents)[number]['lists'][number]['icon']
+
+export type TabsContentList = (typeof TabsContents)[number]['lists'][number]
 
 export type TabsContentIconId = (typeof TabsContents)[number]['lists'][number]['id']

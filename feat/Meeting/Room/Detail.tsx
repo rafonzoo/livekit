@@ -6,9 +6,9 @@ import type { LocalUserChoices } from '@livekit/components-react'
 import type { ConnectionDetails } from '@/feat/Meeting/types'
 import type { LocalUserChoicesPassword } from '@/feat/Meeting/PreJoin/PreJoin'
 import { useEffect, useRef, useState } from 'react'
-import { RoomsToolbar } from '@/feat/Meeting/Rooms/Toolbar'
+import { RoomContent, RoomConference } from '@/feat/Meeting/Room'
 import { PreJoin } from '@/feat/Meeting/PreJoin/PreJoin'
-import { InterceptorRoom } from '@/feat/Meeting/PreJoin/InterceptorRoom'
+import { InterceptorRoom } from '@/feat/Meeting/PreJoin/Interceptor'
 import { ConnectionInterceptor } from '@/feat/Meeting/enum'
 
 const LIVEKIT_CSS_ENABLE = true
@@ -17,7 +17,7 @@ const LIVEKIT_CSS_ID = 'livekit-style'
 
 const LIVEKIT_CSS_PATH = '/lib/css/livekit.css'
 
-interface RoomsProps {
+export interface RoomDetailProps {
   roomName: string
   region?: string
   hq: boolean
@@ -26,7 +26,7 @@ interface RoomsProps {
   isTesting?: boolean
 }
 
-const Rooms: FC<RoomsProps> = (props) => {
+export const RoomDetail: FC<RoomDetailProps> = (props) => {
   const [interceptor, setInterceptor] = useState<ConnectionInterceptor | null>(null)
   const [isCSSLoaded, setIsCSSLoaded] = useState(!LIVEKIT_CSS_ENABLE)
   const [loading, setLoading] = useState(false)
@@ -115,7 +115,7 @@ const Rooms: FC<RoomsProps> = (props) => {
   }
 
   return isReady && isCSSLoaded ? (
-    <RoomsToolbar
+    <RoomConference
       connectionDetails={connectionDetails}
       userChoices={preJoinChoices}
       options={{
@@ -123,7 +123,9 @@ const Rooms: FC<RoomsProps> = (props) => {
         hq: props.hq,
         singlePeerConnection: props.singlePeerConnection,
       }}
-    />
+    >
+      <RoomContent />
+    </RoomConference>
   ) : (
     <PreJoin
       defaults={{ ...preJoinDefaults.current, username: 'Rafa' }}
@@ -135,5 +137,3 @@ const Rooms: FC<RoomsProps> = (props) => {
     />
   )
 }
-
-export default Rooms

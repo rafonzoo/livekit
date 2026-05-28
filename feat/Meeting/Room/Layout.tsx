@@ -1,9 +1,8 @@
 'use client'
 
 import type { ComponentProps, CSSProperties, FC } from 'react'
-import { default as dynamic } from 'next/dynamic'
 import { ConnectionState } from 'livekit-client'
-import { HandIcon, SpinnerIcon } from '@phosphor-icons/react'
+import { HandIcon } from '@phosphor-icons/react'
 import {
   useCreateLayoutContext,
   LayoutContextProvider,
@@ -17,29 +16,26 @@ import {
   useConnectionState,
 } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
-import { useParamsState } from '@/hooks/use-params-state'
-import { useConferenceRoom } from '@/hooks'
-import { RoomsToastInfo } from '@/feat/Meeting/Rooms/ToastInfo'
-import { RoomsTabPanel } from '@/feat/Meeting/Rooms/TabPanel'
-import { RoomsControl } from '@/feat/Meeting/Rooms/Controls'
+import { useParamsState, useConferenceRoom } from '@/hooks'
+import { RoomToastInfo, RoomTabPanel, RoomControl, RoomCanvas } from '@/feat/Meeting/Room'
 import { RoomTabs } from '@/feat/Meeting/const'
 import { ButtonIcon } from '@/components/Button'
 
-const Whiteboard = dynamic(() => import('@/feat/Meeting/Addons/Whiteboard'), {
-  ssr: false,
-  loading: () => (
-    <div className='bg-background text-muted-foreground absolute inset-0 z-5 flex items-center justify-center overflow-hidden rounded-md text-sm'>
-      <SpinnerIcon size={24} className='mr-2 animate-spin' /> Sedang memuat...
-    </div>
-  ),
-})
+// const Whiteboard = dynamic(() => import('@/feat/Meeting/Addons/Whiteboard'), {
+//   ssr: false,
+//   loading: () => (
+//     <div className='bg-background text-muted-foreground absolute inset-0 z-5 flex items-center justify-center overflow-hidden rounded-md text-sm'>
+//       <SpinnerIcon size={24} className='mr-2 animate-spin' /> Sedang memuat...
+//     </div>
+//   ),
+// })
 
-export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, ...props }) => {
+export const RoomLayout: FC<ComponentProps<'main'>> = ({ className, children, ...props }) => {
   const layoutContext = useCreateLayoutContext()
   const { tracks, focusTrack, carouselTracks } = useConferenceRoom({ layoutContext })
-  const { tabsCode, isPanelActive, isWhiteboard } = useParamsState()
+  const { tabsCode, isPanelActive } = useParamsState()
   const currentTab = RoomTabs.find(({ id }) => tabsCode === id)
-  const RoomsPanelContent = currentTab?.content?.() ?? (() => null)
+  const RoomPanelContent = currentTab?.content?.() ?? (() => null)
   const room = useMaybeRoomContext()
   const state = useConnectionState(room)
 
@@ -59,9 +55,10 @@ export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, 
               data-lk-theme='default'
               style={{ '--lk-control-bar-height': '0px' } as CSSProperties}
             >
-              <div className={cn(!isWhiteboard ? 'hidden' : void 0)}>
+              {/* <div className={cn(!isWhiteboard ? 'hidden' : void 0)}>
                 <Whiteboard />
-              </div>
+              </div> */}
+              <RoomCanvas />
               <div className='absolute inset-0 *:h-full *:w-full'>
                 {!focusTrack ? (
                   <div className='lk-grid-layout-wrapper'>
@@ -86,18 +83,18 @@ export const RoomsLiveKit: FC<ComponentProps<'main'>> = ({ className, children, 
                   </div>
                 )}
               </div>
-              <RoomsToastInfo />
+              <RoomToastInfo />
             </div>
-            <RoomsTabPanel className='xl:bottom-34'>
-              <RoomsPanelContent />
-            </RoomsTabPanel>
+            <RoomTabPanel className='xl:bottom-34'>
+              <RoomPanelContent />
+            </RoomTabPanel>
           </div>
           {state !== ConnectionState.Connecting && (
-            <RoomsControl>
+            <RoomControl>
               <ButtonIcon isActive>
                 <HandIcon weight='fill' size={20} />
               </ButtonIcon>
-            </RoomsControl>
+            </RoomControl>
           )}
           {children}
         </div>

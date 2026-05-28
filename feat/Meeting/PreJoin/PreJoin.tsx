@@ -13,7 +13,7 @@ import {
 } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
 import { usePreJoin, useTabEffect } from '@/hooks'
-import { ToggleTrack } from '@/feat/Meeting/PreJoin/ToggleTrack'
+import { ToggleTrack } from '@/components/ToggleTrack'
 import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
 
 export const defaultPrejoin = {

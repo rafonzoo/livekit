@@ -7,7 +7,7 @@ import { ConnectionState } from 'livekit-client'
 import { SpinnerIcon } from '@phosphor-icons/react'
 import { useConnectionState } from '@livekit/components-react'
 
-export const RoomsToastInfo: FC<ConnectionStateToastProps> = (props) => {
+export const RoomToastInfo: FC<ConnectionStateToastProps> = (props) => {
   const [notification, setNotification] = useState<ReactElement | undefined>(undefined)
   const state = useConnectionState(props.room)
 

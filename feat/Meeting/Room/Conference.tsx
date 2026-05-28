@@ -10,12 +10,12 @@ import type {
 import type { LocalUserChoices } from '@livekit/components-react'
 import type { ConnectionDetails } from '@/feat/Meeting/types'
 import { useEffect, useRef } from 'react'
-import { ConnectionState, MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
+import { MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
 import { RoomContext } from '@livekit/components-react'
-import { useParamsState } from '@/hooks/use-params-state'
-import { RoomsLiveKit } from '@/feat/Meeting/Rooms/LiveKit'
+import { useParamsState } from '@/hooks'
+import { RoomState, RoomLayout } from '@/feat/Meeting/Room'
 
-export interface RoomsConferenceProps {
+export interface RoomConferenceProps {
   children?: ReactNode
   userChoices: LocalUserChoices
   connectionDetails: ConnectionDetails
@@ -26,7 +26,7 @@ export interface RoomsConferenceProps {
   }
 }
 
-export const RoomsConference: FC<RoomsConferenceProps> = ({ children, ...props }) => {
+export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) => {
   const propsRef = useRef(props)
   const roomOptions = useRef((): RoomOptions => {
     const { current } = propsRef
@@ -57,9 +57,9 @@ export const RoomsConference: FC<RoomsConferenceProps> = ({ children, ...props }
   })
 
   const room = useRef(new Room(roomOptions.current()))
-  const { params, goTo } = useParamsState<{ name: string }>()
+  const { router } = useParamsState<{ name: string }>()
   const roomEvent = useRef({
-    leave: () => goTo(params.name),
+    leave: () => router.replace('/'),
     error: (err: unknown) => {
       console.error(err)
 
@@ -77,7 +77,6 @@ export const RoomsConference: FC<RoomsConferenceProps> = ({ children, ...props }
 
     currentRoom.on(RoomEvent.Disconnected, leave)
     currentRoom.on(RoomEvent.MediaDevicesError, error)
-
     currentRoom.on(RoomEvent.MediaDevicesError, (error) => {
       const failure = MediaDeviceFailure.getFailure(error)
 
@@ -101,16 +100,14 @@ export const RoomsConference: FC<RoomsConferenceProps> = ({ children, ...props }
     return () => {
       currentRoom.off(RoomEvent.Disconnected, leave)
       currentRoom.off(RoomEvent.MediaDevicesError, error)
-
-      if (currentRoom.state === ConnectionState.Connected) {
-        currentRoom.disconnect()
-      }
     }
   }, [])
 
   return (
     <RoomContext.Provider value={room.current}>
-      <RoomsLiveKit>{children}</RoomsLiveKit>
+      <RoomState>
+        <RoomLayout>{children}</RoomLayout>
+      </RoomState>
     </RoomContext.Provider>
   )
 }

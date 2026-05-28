@@ -5,7 +5,7 @@ import { useEffect, useEffectEvent, useRef } from 'react'
 import { DefaultColorStyle, Tldraw } from 'tldraw'
 import { RoomEvent } from 'livekit-client'
 import { useRoomContext } from '@livekit/components-react'
-import { useParamsState } from '@/hooks/use-params-state'
+import { useParamsState } from '@/hooks'
 import { LiveKitAction } from '@/feat/Meeting/enum'
 
 import 'tldraw/tldraw.css'
