@@ -20,7 +20,7 @@ import {
 } from '@/feat/Tabs'
 
 export const TabsMeeting: FC = () => {
-  const { activeScreen, items } = useTabsMeeting()
+  const { activeScreen, isHostScreen, isHostRecord, items } = useTabsMeeting()
 
   return (
     <TabsListGroups>
@@ -28,7 +28,7 @@ export const TabsMeeting: FC = () => {
         <TabsListGroup key={id}>
           <TabsListTitle>{headline}</TabsListTitle>
           <TabsList>
-            {lists.map(({ id, code, title, description, isRecording, icon, handle }) => (
+            {lists.map(({ id, code, title, description, onRecord, icon, handle }) => (
               <TabsListItem key={id}>
                 {!code && <TabsListItemAction onClick={handle} />}
                 <TabsListItemIcon>
@@ -39,16 +39,19 @@ export const TabsMeeting: FC = () => {
                   <TabsListItemText>{description}</TabsListItemText>
                 </TabsListItemContent>
                 {code > 0 &&
-                  (typeof isRecording === 'undefined' ? (
+                  (typeof onRecord === 'undefined' ? (
                     <TabsListItemActionStart
                       onClick={handle}
-                      disabled={activeScreen && activeScreen !== code}
+                      disabled={isHostScreen ? activeScreen !== code : !!activeScreen}
                     >
-                      {activeScreen === code ? 'Berhenti' : 'Mulai'}
+                      {isHostScreen && activeScreen === code ? 'Berhenti' : 'Mulai'}
                     </TabsListItemActionStart>
                   ) : (
-                    <TabsListItemActionRecord onClick={handle}>
-                      {isRecording ? (
+                    <TabsListItemActionRecord
+                      disabled={!isHostRecord ? onRecord : void 0}
+                      onClick={handle}
+                    >
+                      {isHostRecord && onRecord ? (
                         <StopIcon size={27} weight='fill' />
                       ) : (
                         <RecordIcon size={27} weight='fill' />

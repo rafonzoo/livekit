@@ -3,5 +3,5 @@
 import type { FC } from 'react'
 
 export const TabsParticipant: FC = () => {
-  return <div data-slot='tabs-participant'>TabsParticipant</div>
+  return <div>TabsParticipant</div>
 }

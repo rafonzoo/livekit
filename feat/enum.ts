@@ -1,13 +1,17 @@
 export enum LiveKitAction {
-  WhiteboardRequest = 'WHITEBOARD_REQUEST',
-  WhiteboardClose = 'WHITEBOARD_CLOSE',
+  SnapshotRequest = 'SNAPSHOT_REQUEST',
+  SnapshotReply = 'SNAPSHOT_REPLY',
+  // WhiteboardRequest = 'WHITEBOARD_REQUEST',
+  // WhiteboardClose = 'WHITEBOARD_CLOSE',
   WhiteboardUpdate = 'WHITEBOARD_UPDATE',
+  YoutubeUpdate = 'YOUTUBE_UPDATE',
 }
 
 export enum ParticipantAttribute {
   ScreenRecord = 'SCREEN_RECORD',
   ScreenActive = 'SCREEN_ACTIVE',
   ScreenActiveHost = 'SCREEN_ACTIVE_HOST',
+  ScreenActiveUrl = 'SCREEN_ACTIVE_URL',
 }
 
 export enum ConnectionInterceptor {

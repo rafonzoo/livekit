@@ -11,7 +11,6 @@ export const TabsButton: FC<ComponentProps<'button'> & { isActive?: boolean }> =
   return (
     <button
       type='button'
-      data-slot='tabs-button'
       className={cn(
         'focus:ring-primary inline-flex size-10 items-center justify-center rounded-md border shadow not-disabled:cursor-pointer',
         isActive

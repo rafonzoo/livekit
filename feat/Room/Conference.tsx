@@ -9,8 +9,8 @@ import type {
 } from 'livekit-client'
 import type { LocalUserChoices } from '@livekit/components-react'
 import type { ConnectionDetails } from '@/feat/types'
-import { useEffect, useRef } from 'react'
-import { MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
+import { useEffect, useMemo, useRef } from 'react'
+import { ConnectionState, MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
 import { RoomContext } from '@livekit/components-react'
 import { useParamsState } from '@/hooks'
 import { RoomState, RoomLayout } from '@/feat/Room'
@@ -56,8 +56,8 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
     }
   })
 
-  const room = useRef(new Room(roomOptions.current()))
   const { router } = useParamsState<{ name: string }>()
+  const room = useMemo(() => new Room(roomOptions.current()), []) // Maybe changed
   const roomEvent = useRef({
     leave: () => router.replace('/'),
     error: (err: unknown) => {
@@ -71,13 +71,12 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
 
   useEffect(() => {
     const { serverUrl, participantToken } = propsRef.current.connectionDetails
-    const { localParticipant } = room.current
+    const { localParticipant } = room
     const { leave, error } = roomEvent.current
-    const currentRoom = room.current
 
-    currentRoom.on(RoomEvent.Disconnected, leave)
-    currentRoom.on(RoomEvent.MediaDevicesError, error)
-    currentRoom.on(RoomEvent.MediaDevicesError, (error) => {
+    room.on(RoomEvent.Disconnected, leave)
+    room.on(RoomEvent.MediaDevicesError, error)
+    room.on(RoomEvent.MediaDevicesError, (error) => {
       const failure = MediaDeviceFailure.getFailure(error)
 
       if (failure === MediaDeviceFailure.PermissionDenied) {
@@ -87,7 +86,7 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
       }
     })
 
-    currentRoom.connect(serverUrl, participantToken, { autoSubscribe: true }).catch(error)
+    room.connect(serverUrl, participantToken, { autoSubscribe: true }).catch(error)
 
     if (propsRef.current.userChoices.videoEnabled) {
       localParticipant.setCameraEnabled(true).catch(error)
@@ -98,13 +97,17 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
     }
 
     return () => {
-      currentRoom.off(RoomEvent.Disconnected, leave)
-      currentRoom.off(RoomEvent.MediaDevicesError, error)
+      room.off(RoomEvent.Disconnected, leave)
+      room.off(RoomEvent.MediaDevicesError, error)
+
+      if (room.state === ConnectionState.Connected) {
+        room.disconnect()
+      }
     }
-  }, [])
+  }, [room])
 
   return (
-    <RoomContext.Provider value={room.current}>
+    <RoomContext.Provider value={room}>
       <RoomState>
         <RoomLayout>{children}</RoomLayout>
       </RoomState>

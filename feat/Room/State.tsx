@@ -1,20 +1,28 @@
 'use client'
 
-import type { FC, ReactNode } from 'react'
+import type { Editor } from 'tldraw'
+import type { FC, ReactNode, RefObject } from 'react'
 import type { RemoteParticipant } from 'livekit-client'
 import type { ScreenCode } from '@/feat/enum'
-import { createContext, useContext, useEffect, useState } from 'react'
-import { ConnectionState, RoomEvent } from 'livekit-client'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { RoomEvent } from 'livekit-client'
 import { useMaybeRoomContext } from '@livekit/components-react'
 import { loginfo, num } from '@/lib/utils'
 import { ParticipantAttribute } from '@/feat/enum'
 
-type ScreenID = Exclude<ScreenCode, ScreenCode.Recording>
+export type ScreenID = Exclude<ScreenCode, ScreenCode.Recording>
 
-interface StateContextProps {
-  screen: { id: ScreenID; host: string } | null
+export interface ScreenMessage {
+  id: ScreenID
+  host: string
+  url?: string
+}
+
+export interface StateContextProps {
+  screen: ScreenMessage | null
   record: string | null
-  startActiveScreen: (code: ScreenID) => Promise<void>
+  editorRef: RefObject<Editor | null>
+  startActiveScreen: (code: ScreenID, url?: string) => Promise<void>
   stopActiveScreen: () => Promise<void>
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
@@ -27,11 +35,12 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
   const room = useMaybeRoomContext()
   const [screen, setScreen] = useState<StateContextProps['screen'] | null>(null)
   const [record, setRecord] = useState<StateContextProps['record'] | null>(null)
+  const editorRef = useRef<Editor | null>(null)
 
   const startRecording = async () => {
     if (!room?.localParticipant) return
     await room.localParticipant.setAttributes({
-      [ParticipantAttribute.ScreenRecord]: room.localParticipant.sid,
+      [ParticipantAttribute.ScreenRecord]: room.localParticipant.identity,
     })
   }
 
@@ -42,11 +51,12 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
     })
   }
 
-  const startActiveScreen = async (code: ScreenID) => {
+  const startActiveScreen = async (code: ScreenID, url?: string) => {
     if (!room?.localParticipant) return
     await room.localParticipant.setAttributes({
       [ParticipantAttribute.ScreenActive]: String(code),
-      [ParticipantAttribute.ScreenActiveHost]: room.localParticipant.sid,
+      [ParticipantAttribute.ScreenActiveHost]: room.localParticipant.identity,
+      ...(url ? { [ParticipantAttribute.ScreenActiveUrl]: url } : {}),
     })
   }
 
@@ -55,6 +65,7 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
     await room.localParticipant.setAttributes({
       [ParticipantAttribute.ScreenActive]: '',
       [ParticipantAttribute.ScreenActiveHost]: '',
+      [ParticipantAttribute.ScreenActiveUrl]: '',
     })
   }
 
@@ -73,8 +84,11 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
 
       allParticipants.forEach((participant) => {
         const currentScreen = num(participant.attributes?.[ParticipantAttribute.ScreenActive])
+        const url = participant.attributes?.[ParticipantAttribute.ScreenActiveUrl]
+
         if (currentScreen) {
-          newScreen = { id: currentScreen, host: participant.sid }
+          const payload = { id: currentScreen, host: participant.identity }
+          newScreen = url ? { ...payload, url } : payload
         }
 
         const hostId = participant.attributes?.[ParticipantAttribute.ScreenRecord]
@@ -102,14 +116,14 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
       })
     }
 
-    const handleLeavingHost = ({ attributes, sid }: RemoteParticipant) => {
+    const handleLeavingHost = ({ attributes, identity }: RemoteParticipant) => {
       const wasScreenHost =
         ParticipantAttribute.ScreenActiveHost in attributes &&
-        attributes[ParticipantAttribute.ScreenActiveHost] === sid
+        attributes[ParticipantAttribute.ScreenActiveHost] === identity
 
       const wasRecordHost =
         ParticipantAttribute.ScreenRecord in attributes &&
-        attributes[ParticipantAttribute.ScreenRecord] === sid
+        attributes[ParticipantAttribute.ScreenRecord] === identity
 
       if (wasScreenHost || wasRecordHost) {
         syncRoomState()
@@ -126,16 +140,20 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
       room.off(RoomEvent.LocalTrackPublished, syncRoomState)
       room.off(RoomEvent.ParticipantAttributesChanged, syncRoomState)
       room.off(RoomEvent.ParticipantDisconnected, handleLeavingHost)
-
-      if (room.state === ConnectionState.Connected) {
-        room.disconnect()
-      }
     }
   }, [room])
 
   return (
     <StateContext.Provider
-      value={{ screen, record, startRecording, stopRecording, startActiveScreen, stopActiveScreen }}
+      value={{
+        screen,
+        record,
+        editorRef,
+        startRecording,
+        stopRecording,
+        startActiveScreen,
+        stopActiveScreen,
+      }}
     >
       {children}
     </StateContext.Provider>

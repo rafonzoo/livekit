@@ -31,6 +31,16 @@ export function isVideoCodec(codec?: string): codec is VideoCodec {
   return !!codec && videoCodecs.includes(codec as VideoCodec)
 }
 
+export function parseYoutubeURL(url?: string) {
+  if (!url) return ''
+
+  // Accept full YouTube URL or bare video ID
+  const match = /(?:youtube\.com\/watch\?v=|youtu\.be\/|embed\/)([^&?/]+)/.exec(url.trim())
+  const youtubeVideoID = match?.[1] ?? url.trim()
+
+  return youtubeVideoID
+}
+
 export async function unsecuredCopyToClipboard(text: string) {
   const textArea = document.createElement('textarea')
   textArea.value = text

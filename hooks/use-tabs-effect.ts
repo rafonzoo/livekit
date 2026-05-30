@@ -5,7 +5,7 @@ import { SearchParamsKey } from '@/feat/enum'
 import { RoomTabs } from '@/feat/const'
 
 export function useTabEffect() {
-  const { router, tabsCode, pathname, currentParams, isWhiteboard, closeScreen } = useParamsState()
+  const { router, tabsCode, pathname, currentParams } = useParamsState()
 
   const redirectInvalidTab = useEffectEvent((tabId: number) => {
     if (!RoomTabs.find((tabs) => tabs.id === tabId)) {
@@ -18,12 +18,5 @@ export function useTabEffect() {
     }
   })
 
-  const redirectUnauthorizedWhiteboard = useEffectEvent(() => {
-    if (isWhiteboard) {
-      closeScreen()
-    }
-  })
-
   useEffect(() => redirectInvalidTab(tabsCode), [tabsCode])
-  useEffect(() => redirectUnauthorizedWhiteboard(), [])
 }

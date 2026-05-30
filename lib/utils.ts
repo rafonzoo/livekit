@@ -2,6 +2,10 @@ import type { ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { default as clsx } from 'clsx'
 
+export const encoder = new TextEncoder()
+
+export const decoder = new TextDecoder()
+
 export function encodePassphrase(passphrase: string) {
   return encodeURIComponent(passphrase)
 }

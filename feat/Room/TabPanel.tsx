@@ -25,14 +25,13 @@ export const RoomTabPanel: FC<ComponentProps<'aside'>> = ({ className, children,
 
   return (
     <aside
-      data-slot='rooms-tab-panel'
       className={cn(
         'fixed top-3 right-3 bottom-16 left-3 z-10 flex flex-col overflow-auto rounded-md border shadow md:left-auto md:w-100 md:max-w-100',
         className
       )}
       {...props}
     >
-      <div data-slot='rooms-tab-panel-header' className='flex flex-col px-5 pt-5'>
+      <div className='flex flex-col px-5 pt-5'>
         <div className='flex items-center justify-between'>
           {hasChild && (
             <button

@@ -1,6 +1,7 @@
 'use client'
 
 import type { FC, ReactNode } from 'react'
+import { ConnectionState } from 'livekit-client'
 import { MonitorPlayIcon, PhoneSlashIcon, SmileyIcon } from '@phosphor-icons/react'
 import {
   MicDisabledIcon,
@@ -8,9 +9,9 @@ import {
   MicIcon,
   CameraIcon,
   useRoomContext,
+  useConnectionState,
 } from '@livekit/components-react'
-import { useParamsState } from '@/hooks'
-import { useMediaControls } from '@/hooks'
+import { useParamsState, useMediaControls } from '@/hooks'
 import { ToggleTrack } from '@/components/ToggleTrack'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { ButtonIcon } from '@/components/Button'
@@ -26,6 +27,11 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
     handleToggleVideo,
     handleToggleShareScreen,
   } = useMediaControls({ room })
+  const state = useConnectionState(room)
+
+  if (state === ConnectionState.Connecting) {
+    return null
+  }
 
   return (
     <div className='bg-background flex items-center justify-center gap-2 rounded-md border px-1 py-2 shadow *:not-[div]:size-10 md:*:not-[div]:size-12 xl:min-h-28 xl:gap-4 xl:px-5 xl:py-6'>
