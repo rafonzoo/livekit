@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { useParamsState } from '@/hooks'
 import { RoomTabsTools, RoomTabs } from '@/feat/const'
 
-export const RoomTabPanel: FC<ComponentProps<'aside'>> = ({ className, children, ...props }) => {
+export const RoomPanel: FC<ComponentProps<'aside'>> = ({ className, children, ...props }) => {
   const { tabsCode, isPanelActive, openTab, closePanel } = useParamsState()
   const room = useRoomContext()
   const title = RoomTabsTools.find((copy) => copy.tabIds.includes(tabsCode))?.title ?? ''

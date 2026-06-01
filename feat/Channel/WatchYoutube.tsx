@@ -1,4 +1,5 @@
 'use client'
+
 import type { default as YT } from 'youtube'
 import type { FC } from 'react'
 import { useEffect, useRef, useEffectEvent } from 'react'
@@ -7,7 +8,8 @@ import { useRoomContext } from '@livekit/components-react'
 import { cn, decoder, encoder } from '@/lib/utils'
 import { useRoomState } from '@/feat/Room'
 import { parseYoutubeURL } from '@/feat/helpers'
-import { LiveKitAction } from '@/feat/enum'
+import { LiveKitAction, ScreenCode } from '@/feat/enum'
+import { InputHost } from '@/components/InputHost'
 
 declare global {
   interface Window {
@@ -34,7 +36,7 @@ declare global {
 }
 
 export const WatchYoutube: FC<{ onReady?: () => void }> = ({ onReady }) => {
-  const { screen } = useRoomState()
+  const { screen, startActiveScreen } = useRoomState()
   const room = useRoomContext()
   const videoUrl = screen?.url ?? ''
   const hasControl = room.localParticipant.identity === screen?.host
@@ -136,8 +138,12 @@ export const WatchYoutube: FC<{ onReady?: () => void }> = ({ onReady }) => {
       playerVars: {
         autoplay: 0,
         controls: hasControl ? 1 : 0,
+        disablekb: 1,
         modestbranding: 1,
         rel: 0,
+        fs: 0,
+        iv_load_policy: 3,
+        showinfo: 0,
       },
       events: {
         onReady: () => {
@@ -233,29 +239,22 @@ export const WatchYoutube: FC<{ onReady?: () => void }> = ({ onReady }) => {
   return (
     <div className='absolute inset-0 bg-black'>
       {/* URL input — only visible to the host */}
-      {hasControl && (
-        <div className='absolute top-0 right-0 z-10 flex w-100 max-w-full gap-2'>
-          <input
-            type='text'
-            placeholder='Masukkan URL youtube atau video id'
-            defaultValue={videoUrl}
-            className='bg-background h-9 flex-1 border px-3 py-1 text-sm text-black shadow'
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter') return
-              const input = e.currentTarget.value.trim()
-              const newVideoId = parseYoutubeURL(input)
+      <InputHost
+        url={videoUrl}
+        onSave={async (newValue) => {
+          await startActiveScreen(ScreenCode.WatchYoutube, newValue)
+        }}
+        onEnter={(newValue) => {
+          const newVideoId = parseYoutubeURL(newValue)
 
-              videoIdRef.current = newVideoId
-              playerRef.current?.loadVideoById({ videoId: newVideoId })
-            }}
-          />
-        </div>
-      )}
-
+          videoIdRef.current = newVideoId
+          playerRef.current?.loadVideoById({ videoId: newVideoId })
+        }}
+      />
       <div
         className={cn(
           'absolute inset-0 flex items-center justify-center',
-          hasControl && 'inset-[36px_0_0]'
+          hasControl && 'inset-bs-11'
         )}
       >
         <div

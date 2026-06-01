@@ -18,7 +18,7 @@ import {
 } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
 import { useParamsState, useConferenceRoom } from '@/hooks'
-import { RoomToastInfo, RoomTabPanel, RoomControl, RoomCanvas } from '@/feat/Room'
+import { RoomToast, RoomPanel, RoomControl, RoomCanvas } from '@/feat/Room'
 import { RoomTabs } from '@/feat/const'
 import { ButtonIcon } from '@/components/Button'
 
@@ -89,11 +89,11 @@ export const RoomLayout: FC<ComponentProps<'main'>> = ({ className, children, ..
             >
               <RoomCanvas />
               <RoomGrid context={layoutContext} />
-              <RoomToastInfo />
+              <RoomToast />
             </div>
-            <RoomTabPanel className='xl:bottom-34'>
+            <RoomPanel className='xl:bottom-34'>
               <RoomPanelContent />
-            </RoomTabPanel>
+            </RoomPanel>
           </RoomBoard>
           <RoomControl>
             <ButtonIcon isActive>

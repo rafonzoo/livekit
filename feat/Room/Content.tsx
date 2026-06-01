@@ -5,11 +5,12 @@ import { useEffect, useRef, useState } from 'react'
 import { CopyIcon } from '@phosphor-icons/react'
 import { cn, qstring } from '@/lib/utils'
 import { useParamsState } from '@/hooks'
-import { TabsButton, TabsRoomIcon } from '@/feat/Tabs'
+import { TabsRoomIcon } from '@/feat/Tabs'
 import { copyHandler } from '@/feat/helpers'
 import { SearchParamsKey } from '@/feat/enum'
 import { RoomTabsTools, RoomTabs } from '@/feat/const'
 import { HugeIcon, Menu } from '@/components/HugeIcon'
+import { ButtonTab } from '@/components/Button'
 
 export const RoomContent: FC = () => {
   const [mobileOpen, setMobileOpen] = useState(true)
@@ -56,17 +57,17 @@ export const RoomContent: FC = () => {
             <div className='flex h-9 w-50 cursor-text items-center rounded-md border px-3 shadow'>
               {params.name}
             </div>
-            <TabsButton
+            <ButtonTab
               className='size-9'
               title='Salin kode ruangan'
               onClick={copyText.current(params.name)}
             >
               <CopyIcon size={20} />
-            </TabsButton>
+            </ButtonTab>
           </div>
         </div>
       </div>
-      <TabsButton
+      <ButtonTab
         className='xl:hidden'
         onClick={(e) => {
           e.preventDefault()
@@ -74,7 +75,7 @@ export const RoomContent: FC = () => {
         }}
       >
         <HugeIcon icon={Menu} size={22} />
-      </TabsButton>
+      </ButtonTab>
       <div
         className={cn(
           'flex grow gap-3 justify-self-stretch xl:flex xl:grow-0',
@@ -82,7 +83,7 @@ export const RoomContent: FC = () => {
         )}
       >
         {RoomTabsTools.map(({ id, icon, tabIds }) => (
-          <TabsButton
+          <ButtonTab
             key={id}
             isActive={tabIds.includes(tabsCode) && isPanelActive}
             className='w-full xl:w-10'
@@ -108,7 +109,7 @@ export const RoomContent: FC = () => {
             }}
           >
             <TabsRoomIcon name={icon} />
-          </TabsButton>
+          </ButtonTab>
         ))}
       </div>
     </div>

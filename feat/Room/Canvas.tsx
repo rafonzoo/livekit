@@ -5,21 +5,38 @@ import type { ScreenID } from '@/feat/Room/State'
 import { useEffect, useState } from 'react'
 import { default as dynamic } from 'next/dynamic'
 import { RecordIcon } from '@phosphor-icons/react'
+import { Chevron } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
 import { useRoomState } from '@/feat/Room/State'
 import { ScreenCode } from '@/feat/enum'
 import { Loading } from '@/components/Loading'
 
-const Whiteboard = dynamic(async () => (await import('@/feat/Collab/Whiteboard')).Whiteboard, {
+const Whiteboard = dynamic(async () => (await import('@/feat/Realtime/Whiteboard')).Whiteboard, {
   ssr: false,
-  loading: () => <Loading className='absolute' />,
+  loading: () => <Loading />,
 })
 
 const WatchYoutube = dynamic(
-  async () => (await import('@/feat/Collab/WatchYoutube')).WatchYoutube,
+  async () => (await import('@/feat/Channel/WatchYoutube')).WatchYoutube,
   {
     ssr: false,
-    loading: () => <Loading className='absolute' />,
+    loading: () => <Loading />,
+  }
+)
+
+const Presentation = dynamic(
+  async () => (await import('@/feat/Channel/Presentation')).Presentation,
+  {
+    ssr: false,
+    loading: () => <Loading />,
+  }
+)
+
+const SharingNotes = dynamic(
+  async () => (await import('@/feat/Realtime/SharingNotes')).SharingNotes,
+  {
+    ssr: false,
+    loading: () => <Loading />,
   }
 )
 
@@ -31,54 +48,79 @@ const config = {
   [ScreenCode.Whiteboard]: {
     border: cn('border-blue-500'),
     background: cn('bg-blue-500'),
-    title: 'Papan Tulis',
     comp: Whiteboard,
-    // comp: () => null,
   },
   [ScreenCode.WatchYoutube]: {
     border: cn('border-green-500'),
     background: cn('bg-green-500'),
-    title: 'YouTube',
     comp: WatchYoutube,
-    // comp: () => null,
   },
   [ScreenCode.Presentation]: {
     border: cn('border-orange-500'),
     background: cn('bg-orange-500'),
-    title: 'Presentasi',
-    comp: () => null,
+    comp: Presentation,
+  },
+  [ScreenCode.SharingNotes]: {
+    border: cn('border-yellow-400'),
+    background: cn('bg-yellow-400'),
+    comp: SharingNotes,
   },
 }
 
+const configDefault = { border: '', background: '', comp: () => null }
+
 export const RoomCanvas: FC<ComponentProps<'div'>> = ({ className, ...props }) => {
   const { screen, record } = useRoomState()
+  const screnConfig = screen?.id ? config[screen.id] : configDefault
   const [isReady, setIsReady] = useState(false)
+  const [open, setIsOpen] = useState(false)
+  const { border, background, comp: Component } = screnConfig
+  const borderColor = border || (record ? 'border-destructive' : 'border-transparent')
+  const backgroundColor = background || (record ? 'bg-destructive' : 'bg-transparent')
 
   // Reset
-  useEffect(() => setIsReady(false), [screen?.id])
-
-  const {
-    border,
-    background,
-    title,
-    comp: Component,
-  } = screen?.id ? config[screen.id] : { border: '', background: '', title: '', comp: () => null }
-  const borderColor = border || (record ? 'border-destructive' : 'border-transparent')
+  useEffect(() => {
+    setIsReady(false)
+    setIsOpen(!!screen?.id)
+  }, [screen?.id])
 
   return (
-    <div {...props} className={cn('absolute inset-0 z-1', className)}>
+    <div {...props} className={cn('absolute inset-0 z-1 hidden has-[&>*>*]:block', className)}>
       {/* Content layer */}
       <div className='absolute inset-2 [&_.tl-watermark\\_SEE-LICENSE]:hidden!'>
         {screen && (
           <>
             <Loading
               className={cn(
-                'absolute transition-opacity duration-300',
-                isReady ? 'pointer-events-none opacity-0' : 'opacity-100'
+                'absolute transition-opacity delay-300',
+                isReady ? 'opacity-0' : 'opacity-100'
               )}
             />
-            <div className={cn('absolute inset-0', !isReady && 'invisible')}>
-              <Component onReady={() => setIsReady(true)} />
+            <div
+              className={cn(
+                // Base
+                'pointer-events-auto absolute inset-0 transition-all transition-discrete',
+
+                // Overflow handling
+                'overflow-hidden',
+
+                // Starting state (before it show)
+                'starting:opacity-0',
+
+                // State when open (with discrete)
+                'opacity-100',
+
+                // Logic visibility
+                !open && 'hidden opacity-0',
+                !isReady && 'hidden'
+              )}
+            >
+              <Component
+                onReady={() => {
+                  setIsReady(true)
+                  setIsOpen(true)
+                }}
+              />
             </div>
           </>
         )}
@@ -88,19 +130,32 @@ export const RoomCanvas: FC<ComponentProps<'div'>> = ({ className, ...props }) =
       <div
         className={cn('pointer-events-none absolute inset-0 z-10 rounded-md border-8', borderColor)}
       >
+        {/* Top right corner */}
         <div
           className={cn(
-            'pointer-events-auto absolute top-0 right-0 flex items-center gap-2 rounded-bl-md px-3 pt-1.5 pb-3.5',
-            background
+            'pointer-events-auto absolute top-0 right-0 flex h-11 items-center gap-1 rounded-bl-md pl-2 *:-translate-y-0.75',
+            backgroundColor
           )}
         >
           {record && (
-            <button className='flex items-center gap-1 rounded-full bg-black/50 px-2 py-1 text-xs font-semibold text-white'>
-              <RecordIcon size={16} weight='fill' className='animate-pulse text-red-500' />
+            <div className='flex h-8 items-center gap-1 rounded-full bg-black/50 px-2 pr-3 text-sm font-semibold text-white last:mr-2'>
+              <RecordIcon size={20} weight='fill' className='animate-pulse text-red-500' />
               REC
+            </div>
+          )}
+          {screen && (
+            <button
+              className='inline-flex size-8 items-center justify-center rounded-full hover:bg-black/20'
+              onClick={() => setIsOpen((previous) => !previous)}
+            >
+              <Chevron
+                className={cn(
+                  '-translate-x-px scale-125 rotate-0 transition-all',
+                  open && 'rotate-180'
+                )}
+              />
             </button>
           )}
-          {title && <p className='-translate-y-px font-semibold first:translate-y-0'>{title}</p>}
         </div>
       </div>
     </div>

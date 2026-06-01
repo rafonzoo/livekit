@@ -12,6 +12,11 @@ import { ParticipantAttribute } from '@/feat/enum'
 
 export type ScreenID = Exclude<ScreenCode, ScreenCode.Recording>
 
+export interface PresentationContext {
+  getSnapshot: () => number
+  loadSnapshot: (page: number) => void
+}
+
 export interface ScreenMessage {
   id: ScreenID
   host: string
@@ -22,6 +27,8 @@ export interface StateContextProps {
   screen: ScreenMessage | null
   record: string | null
   editorRef: RefObject<Editor | null>
+  viewerRef: RefObject<PresentationContext>
+  isHost: boolean
   startActiveScreen: (code: ScreenID, url?: string) => Promise<void>
   stopActiveScreen: () => Promise<void>
   startRecording: () => Promise<void>
@@ -36,6 +43,11 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
   const [screen, setScreen] = useState<StateContextProps['screen'] | null>(null)
   const [record, setRecord] = useState<StateContextProps['record'] | null>(null)
   const editorRef = useRef<Editor | null>(null)
+  const isHost = room?.localParticipant.identity === screen?.host
+  const viewerRef = useRef<PresentationContext>({
+    getSnapshot: () => 1,
+    loadSnapshot: () => void 0,
+  })
 
   const startRecording = async () => {
     if (!room?.localParticipant) return
@@ -148,7 +160,9 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
       value={{
         screen,
         record,
+        isHost,
         editorRef,
+        viewerRef,
         startRecording,
         stopRecording,
         startActiveScreen,

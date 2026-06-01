@@ -1,9 +1,27 @@
 import type { TabProps } from '@/feat/types'
 import { TabsChats, TabsMeeting, TabsParticipant, TabsPersonalize, TabsSettings } from '@/feat/Tabs'
 import { GroupCode, GroupsCode } from '@/feat/enum'
-import { WatchYoutube } from '@/feat/Collab/WatchYoutube'
-import { SharedNotes } from '@/feat/Collab/SharedNotes'
-import { Polling } from '@/feat/Collab/Polling'
+import { WatchYoutube } from '@/feat/Channel/WatchYoutube'
+import { SharedNotes } from '@/feat/Channel/SharedNotes'
+import { Polling } from '@/feat/Channel/Polling'
+
+export const ChunkSize = 60_000
+
+// prettier-ignore
+export const ColorPalette: { tldraw: string; hex: string }[] = [
+  { tldraw: 'black',        hex: 'rgb(29, 29, 29)' },
+  { tldraw: 'grey',         hex: 'rgb(159, 168, 178)' },
+  { tldraw: 'light-violet', hex: 'rgb(224, 133, 244)' },
+  { tldraw: 'violet',       hex: 'rgb(174, 62, 201)' },
+  { tldraw: 'blue',         hex: 'rgb(68, 101, 233)' },
+  { tldraw: 'light-blue',   hex: 'rgb(75, 161, 241)' },
+  { tldraw: 'yellow',       hex: 'rgb(241, 172, 75)' },
+  { tldraw: 'orange',       hex: 'rgb(225, 105, 25)' },
+  { tldraw: 'green',        hex: 'rgb(9, 146, 104)' },
+  { tldraw: 'light-green',  hex: 'rgb(76, 176, 94)' },
+  { tldraw: 'light-red',    hex: 'rgb(248, 119, 119)' },
+  { tldraw: 'red',          hex: 'rgb(224, 49, 49)' },
+]
 
 export const RoomTabs = [
   {

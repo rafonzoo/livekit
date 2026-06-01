@@ -12,6 +12,6 @@ export * from '@/feat/Room/Layout'
 
 export * from '@/feat/Room/State'
 
-export * from '@/feat/Room/TabPanel'
+export * from '@/feat/Room/Panel'
 
-export * from '@/feat/Room/ToastInfo'
+export * from '@/feat/Room/Toast'

@@ -16,7 +16,7 @@ export const TabsListTitle: FC<ComponentProps<'h3'>> = ({ className, ...props })
 }
 
 export const TabsList: FC<ComponentProps<'ul'>> = ({ className, ...props }) => {
-  return <ul {...props} className={cn('-mx-2.5 flex flex-col', className)} />
+  return <ul {...props} className={cn('-mx-2.5 flex flex-col gap-3', className)} />
 }
 
 export const TabsListItem: FC<ComponentProps<'li'>> = ({ className, ...props }) => {
@@ -24,7 +24,7 @@ export const TabsListItem: FC<ComponentProps<'li'>> = ({ className, ...props }) 
     <li
       {...props}
       className={cn(
-        'has-[[data-slot="tabs-list-item-action"]:hover:not(:disabled)]:bg-primary/10 has-[[data-slot="tabs-list-item-action"]:hover:not(:disabled)]:border-primary relative flex items-center gap-2 rounded-md border border-transparent px-2.5 py-2 text-sm',
+        'has-[[data-slot="tabs-list-item-action"]:hover:not(:disabled)]:bg-primary/10 has-[[data-slot="tabs-list-item-action"]:hover:not(:disabled)]:border-primary relative grid grid-cols-[40px_1fr_auto] items-center gap-2 rounded-md border border-transparent px-2.5 py-2 text-sm',
         className
       )}
     />

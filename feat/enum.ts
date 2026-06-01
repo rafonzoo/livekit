@@ -1,10 +1,20 @@
+export enum MessageType {
+  Update = 0,
+  StateVector = 1,
+}
+
+export enum LiveKitKey {
+  YJSDoc = 'yjs-whiteboard',
+  YJSAwareness = 'yjs-awareness',
+  TLDrawRecord = 'tldraw-records',
+}
+
 export enum LiveKitAction {
   SnapshotRequest = 'SNAPSHOT_REQUEST',
   SnapshotReply = 'SNAPSHOT_REPLY',
-  // WhiteboardRequest = 'WHITEBOARD_REQUEST',
-  // WhiteboardClose = 'WHITEBOARD_CLOSE',
   WhiteboardUpdate = 'WHITEBOARD_UPDATE',
   YoutubeUpdate = 'YOUTUBE_UPDATE',
+  PresentationUpdate = 'PRESENTATION_UPDATE',
 }
 
 export enum ParticipantAttribute {
@@ -37,6 +47,7 @@ export enum ScreenCode {
   Whiteboard = 2,
   Presentation = 3,
   WatchYoutube = 4,
+  SharingNotes = 5,
 }
 
 export enum TabsCode {

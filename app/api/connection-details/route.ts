@@ -1,3 +1,5 @@
+'use server'
+
 import type { NextRequest } from 'next/server'
 import type { AccessTokenOptions, VideoGrant } from 'livekit-server-sdk'
 import type { ConnectionDetails } from '@/feat/types'

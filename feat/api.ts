@@ -4,7 +4,7 @@ import { ScreenCode } from '@/feat/enum'
 
 const DEFAULT_YOUTUBE_URL = 'https://youtu.be/e1QIqXmZ2os?si=Gd9591aZIBoeI3Mi'
 
-const DEFAULT_FILE_URL = 'http://localhost:3000/assets/file.pdf'
+const DEFAULT_FILE_URL = 'https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf'
 
 export async function getRemoteUrl(
   screenId: Extract<ScreenCode, ScreenCode.WatchYoutube | ScreenCode.Presentation>
