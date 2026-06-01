@@ -1,6 +1,7 @@
 import type { Room } from 'livekit-client'
 import { useState, useEffect } from 'react'
 import { RoomEvent } from 'livekit-client'
+import { decoder, encoder } from '@/lib/utils'
 
 export interface HandRaiseEventOption {
   action: string
@@ -13,7 +14,6 @@ export function useHandRaises<T extends HandRaiseEventOption>(room: Room) {
   const [isHandRaised, setIsHandRaised] = useState(false)
 
   const handleHandRaise = (attributes: T) => {
-    const encoder = new TextEncoder()
     const payload = encoder.encode(JSON.stringify(attributes))
 
     room.localParticipant
@@ -34,7 +34,6 @@ export function useHandRaises<T extends HandRaiseEventOption>(room: Room) {
   // Sync hand raise from admin
   useEffect(() => {
     room.on(RoomEvent.DataReceived, (payload) => {
-      const decoder = new TextDecoder()
       const message: T = JSON.parse(decoder.decode(payload as never))
 
       // This will listened by everyone in the room

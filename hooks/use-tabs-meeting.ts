@@ -1,33 +1,71 @@
-import type { TabsContentList } from '@/feat/Meeting/const'
+import type { MouseEvent } from 'react'
+import type { ScreenID } from '@/feat/Room'
+import type { TabsContentList } from '@/feat/const'
+import { useRoomContext } from '@livekit/components-react'
 import { useParamsState } from '@/hooks'
-import { useRoomState } from '@/feat/Meeting/Room'
-import { GroupCode, ScreenCode } from '@/feat/Meeting/enum'
-import { TabsContents } from '@/feat/Meeting/const'
+import { useRoomState } from '@/feat/Room'
+import { GroupCode, ScreenCode } from '@/feat/enum'
+import { TabsContents } from '@/feat/const'
+import { getRemoteUrl } from '@/feat/api'
+
+export interface ImperativeContent {
+  code: 0 | ScreenCode
+  onRecord?: boolean
+  handle: (e: MouseEvent<HTMLButtonElement>) => void
+}
 
 export function useTabsMeeting() {
+  const room = useRoomContext()
   const { screen, record, startRecording, stopRecording, startActiveScreen, stopActiveScreen } =
     useRoomState()
-  const { openTabsSharedNotes, openTabsPolling } = useParamsState()
+  const { openTabsPolling } = useParamsState()
 
-  function handleToggleActiveScreen(id: Exclude<ScreenCode, ScreenCode.Recording>) {
-    return () => {
+  function handleToggleActiveScreen(id: ScreenID) {
+    return async (e: MouseEvent<HTMLButtonElement>) => {
       if (screen?.id === id) {
+        if (!confirm('Apakah anda yakin ingin mengakhiri sesi ini?')) {
+          return e.preventDefault()
+        }
+
         return stopActiveScreen()
       }
 
-      return startActiveScreen(id)
+      if (id === ScreenCode.WatchYoutube || id === ScreenCode.Presentation) {
+        const target = e.currentTarget
+        const prevtext = target.textContent
+
+        target.disabled = true
+        target.textContent = 'Memulai...'
+
+        const { data } = await getRemoteUrl(id)
+
+        if (data?.url) {
+          startActiveScreen(id, data.url)
+        } else {
+          // May add toast error here
+        }
+
+        target.disabled = false
+        target.textContent = prevtext
+      } else {
+        return startActiveScreen(id)
+      }
     }
   }
 
   function remapContent(list: TabsContentList) {
-    let prop: { code: 0 | ScreenCode; handle: () => void; isRecording?: boolean } = {
+    let prop: ImperativeContent = {
       code: 0,
       handle: () => console.warn('one of "TabsContentList" is not been handle'),
     }
 
     switch (list.id) {
       case GroupCode.ShareNote:
-        prop = { ...prop, handle: openTabsSharedNotes }
+        // prop = { ...prop, handle: openTabsSharedNotes }
+        prop = {
+          code: ScreenCode.SharingNotes,
+          handle: handleToggleActiveScreen(ScreenCode.SharingNotes),
+        }
         break
       case GroupCode.Polling:
         prop = { ...prop, handle: openTabsPolling }
@@ -57,7 +95,7 @@ export function useTabsMeeting() {
         prop = {
           ...prop,
           code: ScreenCode.Recording,
-          isRecording: !!record,
+          onRecord: !!record,
           handle: record ? stopRecording : startRecording,
         }
         break
@@ -75,6 +113,8 @@ export function useTabsMeeting() {
 
   return {
     activeScreen: screen?.id,
+    isHostScreen: room.localParticipant.identity === screen?.host,
+    isHostRecord: room.localParticipant.identity === record,
     items: TabsContents.filter(({ hide }) => !hide).map((content) => ({
       ...content,
       lists: content.lists.filter((list) => !list.hide).map(remapContent),

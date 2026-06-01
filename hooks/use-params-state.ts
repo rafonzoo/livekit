@@ -1,7 +1,7 @@
 import type { Params } from 'next/dist/server/request/params'
 import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation'
 import { num, omit, qstring } from '@/lib/utils'
-import { SearchParamsKey, PanelCode, ScreenCode, TabsCode } from '@/feat/Meeting/enum'
+import { SearchParamsKey, PanelCode, TabsCode } from '@/feat/enum'
 
 export function useParamsState<P extends Params = Params>() {
   const router = useRouter()
@@ -12,7 +12,6 @@ export function useParamsState<P extends Params = Params>() {
 
   // ─── Raw codes ────────────────────────────────────────────────
   const panelCode = num(searchParams.get(SearchParamsKey.PanelCode))
-  const screenCode = num(searchParams.get(SearchParamsKey.ScreenCode))
   const tabsCode = num(searchParams.get(SearchParamsKey.TabsCode))
 
   // ─── PanelState ───────────────────────────────────────────────
@@ -22,23 +21,9 @@ export function useParamsState<P extends Params = Params>() {
 
   const closePanel = () => router.replace(qstring(pathname, omit({ ...currentParams }, [SearchParamsKey.PanelCode]))) // prettier-ignore
   const openPanel = (target: PanelCode) => router.replace(qstring(pathname, { ...currentParams, [SearchParamsKey.PanelCode]: target })) // prettier-ignore
-  const togglePanel = (target: PanelCode) => (isScreenActive ? closePanel() : openPanel(target))
+  const togglePanel = (target: PanelCode) => (isPanelActive ? closePanel() : openPanel(target))
   const openPanelOpen = () => openPanel(PanelCode.Open)
   const openPanelSideOpen = () => openPanel(PanelCode.SideOpen)
-
-  // ─── ScreenCode ───────────────────────────────────────────────
-  const isWhiteboard = screenCode === ScreenCode.Whiteboard
-  const isPresentation = screenCode === ScreenCode.Presentation
-  const isWatchYoutube = screenCode === ScreenCode.WatchYoutube
-  const isScreenActive = screenCode > 0
-
-  const closeScreen = () => router.replace(qstring(pathname, omit({ ...currentParams }, [SearchParamsKey.ScreenCode]))) // prettier-ignore
-  const openScreen = (target: ScreenCode) => router.replace(qstring(pathname, { ...currentParams, [SearchParamsKey.ScreenCode]: target })) // prettier-ignore
-  const toggleScreen = (target: ScreenCode) => (isScreenActive ? closeScreen() : openScreen(target))
-
-  const openWhiteboard = () => openScreen(ScreenCode.Whiteboard)
-  const openPresentation = () => openScreen(ScreenCode.Presentation) // prettier-ignore
-  const openWatchYoutube = () => openScreen(ScreenCode.WatchYoutube) // prettier-ignore
 
   // ─── TabsCode ─────────────────────────────────────────────────
   const isTabsMeeting = tabsCode === TabsCode.TabsMeeting
@@ -53,7 +38,7 @@ export function useParamsState<P extends Params = Params>() {
 
   const openTab = (target: TabsCode) => router.replace(qstring(pathname, { ...currentParams, [SearchParamsKey.TabsCode]: target })) // prettier-ignore
   const closeTab = () => router.replace(qstring(pathname, omit({ ...currentParams }, [SearchParamsKey.TabsCode]))) // prettier-ignore
-  const toggleTab = (target: TabsCode) => (isScreenActive ? closeTab() : openTab(target))
+  const toggleTab = (target: TabsCode) => (isTabsActive ? closeTab() : openTab(target))
   const openTabsMeeting = () => openTab(TabsCode.TabsMeeting)
   const openTabsSharedNotes = () => openTab(TabsCode.TabsMeetingSharedNotes)
   const openTabsPolling = () => openTab(TabsCode.TabsMeetingPolling)
@@ -73,7 +58,6 @@ export function useParamsState<P extends Params = Params>() {
 
     // raw codes
     panelCode,
-    screenCode,
     tabsCode,
 
     // PanelCode checks
@@ -87,19 +71,6 @@ export function useParamsState<P extends Params = Params>() {
     openPanel,
     openPanelOpen,
     openPanelSideOpen,
-
-    // ScreenCode checks
-    isWhiteboard,
-    isPresentation,
-    isWatchYoutube,
-    isScreenActive,
-
-    // ScreenCode toggles
-    toggleScreen,
-    closeScreen,
-    openWhiteboard,
-    openPresentation,
-    openWatchYoutube,
 
     // TabsCode checks
     isTabsMeeting,

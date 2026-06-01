@@ -1,0 +1,116 @@
+'use client'
+
+import type { FC, ReactNode } from 'react'
+import type {
+  RoomOptions,
+  TrackPublishDefaults,
+  VideoCaptureOptions,
+  VideoCodec,
+} from 'livekit-client'
+import type { LocalUserChoices } from '@livekit/components-react'
+import type { ConnectionDetails } from '@/feat/types'
+import { useEffect, useMemo, useRef } from 'react'
+import { ConnectionState, MediaDeviceFailure, Room, RoomEvent, VideoPresets } from 'livekit-client'
+import { RoomContext } from '@livekit/components-react'
+import { useParamsState } from '@/hooks'
+import { RoomState, RoomLayout } from '@/feat/Room'
+
+export interface RoomConferenceProps {
+  children?: ReactNode
+  userChoices: LocalUserChoices
+  connectionDetails: ConnectionDetails
+  options: {
+    hq: boolean
+    codec: VideoCodec
+    singlePeerConnection: boolean
+  }
+}
+
+export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) => {
+  const propsRef = useRef(props)
+  const roomOptions = useRef((): RoomOptions => {
+    const { current } = propsRef
+    const videoCodec: VideoCodec | undefined = current.options.codec ?? 'vp9'
+    const videoCaptureDefaults: VideoCaptureOptions = {
+      deviceId: current.userChoices.videoDeviceId ?? undefined,
+      resolution: current.options.hq ? VideoPresets.h2160 : VideoPresets.h720,
+    }
+    const publishDefaults: TrackPublishDefaults = {
+      dtx: false,
+      videoSimulcastLayers: current.options.hq
+        ? [VideoPresets.h1080, VideoPresets.h720]
+        : [VideoPresets.h540, VideoPresets.h216],
+      red: true,
+      videoCodec,
+    }
+
+    return {
+      videoCaptureDefaults: videoCaptureDefaults,
+      publishDefaults: publishDefaults,
+      audioCaptureDefaults: {
+        deviceId: current.userChoices.audioDeviceId ?? undefined,
+      },
+      adaptiveStream: true,
+      dynacast: true,
+      singlePeerConnection: current.options.singlePeerConnection,
+    }
+  })
+
+  const { router } = useParamsState<{ name: string }>()
+  const room = useMemo(() => new Room(roomOptions.current()), []) // Maybe changed
+  const roomEvent = useRef({
+    leave: () => router.replace('/'),
+    error: (err: unknown) => {
+      console.error(err)
+
+      alert(
+        `Encountered an unexpected error, check the console logs for details: ${(err as Error).message}`
+      )
+    },
+  })
+
+  useEffect(() => {
+    const { serverUrl, participantToken } = propsRef.current.connectionDetails
+    const { localParticipant } = room
+    const { leave, error } = roomEvent.current
+
+    room.on(RoomEvent.Disconnected, leave)
+    room.on(RoomEvent.MediaDevicesError, error)
+    room.on(RoomEvent.MediaDevicesError, (error) => {
+      const failure = MediaDeviceFailure.getFailure(error)
+
+      if (failure === MediaDeviceFailure.PermissionDenied) {
+        console.log('User disallowed access to the capturing device.')
+      } else if (failure === MediaDeviceFailure.NotFound) {
+        console.log('The requested device is unavailable.')
+      }
+    })
+
+    room.connect(serverUrl, participantToken, { autoSubscribe: true }).catch(error)
+
+    if (propsRef.current.userChoices.videoEnabled) {
+      localParticipant.setCameraEnabled(true).catch(error)
+    }
+
+    if (propsRef.current.userChoices.audioEnabled) {
+      localParticipant.setMicrophoneEnabled(true).catch(error)
+    }
+
+    return () => {
+      room.off(RoomEvent.Disconnected, leave)
+      room.off(RoomEvent.MediaDevicesError, error)
+
+      if (room.state === ConnectionState.Connected) {
+        room.disconnect()
+      }
+    }
+  }, [room])
+
+  return (
+    <RoomContext.Provider value={room}>
+      <RoomState>
+        <RoomLayout>{children}</RoomLayout>
+      </RoomState>
+    </RoomContext.Provider>
+  )
+}
