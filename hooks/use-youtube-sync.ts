@@ -116,9 +116,9 @@ export function useYoutubeSync(onReady?: () => void) {
       }
 
       // Handle play/pause state
-      if (isPlaying && player.getPlayerState() !== window.YT.PlayerState.PLAYING) {
+      if (isPlaying) {
         player.playVideo()
-      } else if (!isPlaying && player.getPlayerState() === window.YT.PlayerState.PLAYING) {
+      } else if (!isPlaying) {
         player.pauseVideo()
       }
     } catch (err) {
