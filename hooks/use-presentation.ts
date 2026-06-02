@@ -4,9 +4,8 @@ import { useDataChannel, useSnapshotEffect } from '@/hooks'
 import { useRoomState } from '@/feat/Room'
 import { LiveKitAction } from '@/feat/enum'
 
-export function usePresentation(option: { onReady?: () => void }) {
+export function usePresentation(onReady?: () => void) {
   const [{ page }, setState] = useState({ page: 1, zoom: 1 })
-  const { onReady } = option
   const { screen, isHost } = useRoomState()
   const onReadyRef = useRef(onReady)
   const url = screen?.url ?? ''

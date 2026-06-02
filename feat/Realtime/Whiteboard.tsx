@@ -17,7 +17,7 @@ const components: TLComponents = {
 }
 
 export const Whiteboard: FC<{ onReady?: () => void }> = ({ onReady }) => {
-  const { store, provider } = useWhiteboard({ onReady })
+  const { store, provider } = useWhiteboard(onReady)
 
   return (
     <div className='absolute inset-0'>

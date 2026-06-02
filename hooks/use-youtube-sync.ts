@@ -31,7 +31,7 @@ declare global {
   }
 }
 
-export function useYoutubeSync({ onReady }: { onReady?: () => void }) {
+export function useYoutubeSync(onReady?: () => void) {
   const { screen } = useRoomState()
   const room = useRoomContext()
   const videoUrl = screen?.url ?? ''
@@ -236,19 +236,19 @@ export function useYoutubeSync({ onReady }: { onReady?: () => void }) {
 }
 
 // const { startActiveScreen } = useRoomState()
-//   const { videoUrl, videoIdRef, playerRef, hasControl, iframeContainerRef } = useYoutubeSync({
-//     onReady,
-//   })
-
+// const { videoUrl, videoIdRef, playerRef, hasControl, iframeContainerRef } = useYoutubeSync({
+//   onReady,
+// })
+//
 // <InputHost
-//         url={videoUrl}
-//         onSave={async (newValue) => {
-//           await startActiveScreen(ScreenCode.WatchYoutube, newValue)
-//         }}
-//         onEnter={(newValue) => {
-//           const newVideoId = parseYoutubeURL(newValue)
+//   url={videoUrl}
+//   onSave={async (newValue) => {
+//     await startActiveScreen(ScreenCode.WatchYoutube, newValue)
+//   }}
+//   onEnter={(newValue) => {
+//     const newVideoId = parseYoutubeURL(newValue)
 
-//           videoIdRef.current = newVideoId
-//           playerRef.current?.loadVideoById({ videoId: newVideoId })
-//         }}
-//       />
+//     videoIdRef.current = newVideoId
+//     playerRef.current?.loadVideoById({ videoId: newVideoId })
+//   }}
+// />

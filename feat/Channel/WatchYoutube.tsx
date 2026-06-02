@@ -1,21 +1,11 @@
 'use client'
 
-import type { default as YT } from 'youtube'
 import type { FC } from 'react'
 import { cn } from '@/lib/utils'
 import { useYoutubeSync } from '@/hooks'
 
-declare global {
-  interface Window {
-    YT: typeof YT
-    onYouTubeIframeAPIReady: () => void
-  }
-}
-
 export const WatchYoutube: FC<{ onReady?: () => void }> = ({ onReady }) => {
-  const { hasControl, iframeContainerRef } = useYoutubeSync({
-    onReady,
-  })
+  const { hasControl, iframeContainerRef } = useYoutubeSync(onReady)
 
   return (
     <div className='absolute inset-0 bg-black'>
