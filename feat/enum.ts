@@ -12,7 +12,6 @@ export enum LiveKitKey {
 export enum LiveKitAction {
   SnapshotRequest = 'SNAPSHOT_REQUEST',
   SnapshotReply = 'SNAPSHOT_REPLY',
-  WhiteboardUpdate = 'WHITEBOARD_UPDATE',
   YoutubeUpdate = 'YOUTUBE_UPDATE',
   PresentationUpdate = 'PRESENTATION_UPDATE',
 }

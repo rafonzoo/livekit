@@ -4,7 +4,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   experimental: {
-    optimizePackageImports: ['@phosphor-icons/react'],
+    optimizePackageImports: [
+      '@phosphor-icons/react',
+      '@hugeicons/react',
+      '@hugeicons/core-free-icons',
+    ],
   },
 }
 

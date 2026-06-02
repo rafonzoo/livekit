@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { usePreJoin, useTabEffect } from '@/hooks'
 import { ToggleTrack } from '@/components/ToggleTrack'
-import { HugeIcon, Alert01FreeIcons, Loading03FreeIcons } from '@/components/HugeIcon'
+import { HugeIcon, Alert01Icon, Loading03Icon } from '@/components/HugeIcon'
 
 export const defaultPrejoin = {
   autoCheck: false,
@@ -125,7 +125,7 @@ export const PreJoin: FC<PreJoinProps> = (props) => {
           </header>
           {!!deniedDevices.length && (
             <p className='text-destructive grid grid-cols-[18px_1fr] gap-3 rounded-md bg-red-200 p-4'>
-              <HugeIcon icon={Alert01FreeIcons} size={18} />
+              <HugeIcon icon={Alert01Icon} size={18} />
               Error: Tidak dapat menemukan {formattedLabel}, atau pengguna menolak atas izin akses{' '}
               {formattedLabel}. Silahkan muat ulang halaman ini, atau tutup dan kembali ke halaman
               ini untuk mengaktifkan {formattedLabel}.
@@ -282,7 +282,7 @@ export const PreJoin: FC<PreJoinProps> = (props) => {
             >
               {isLoading ? (
                 <>
-                  <HugeIcon icon={Loading03FreeIcons} size={20} className='animate-spin' />
+                  <HugeIcon icon={Loading03Icon} size={20} className='animate-spin' />
                   {isLoadingLabel && <span className='ml-2 inline-block'>{isLoadingLabel}</span>}
                 </>
               ) : (

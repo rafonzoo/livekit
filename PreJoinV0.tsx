@@ -16,7 +16,7 @@ import {
 } from '@livekit/components-react'
 import { log } from '@livekit/components-core'
 import { cn } from '@/lib/utils'
-import { HugeIcon, Loading03FreeIcons } from '@/components/HugeIcon'
+import { HugeIcon, Loading03Icon } from '@/components/HugeIcon'
 
 interface PreJoinProps extends PrejoinPropsBase {
   camOffLabel?: string
@@ -259,7 +259,7 @@ export const PreJoin: FC<PreJoinProps> = ({
             >
               {isLoading ? (
                 <>
-                  <HugeIcon icon={Loading03FreeIcons} size={20} className='animate-spin' />
+                  <HugeIcon icon={Loading03Icon} size={20} className='animate-spin' />
                   {isLoadingLabel && <span className='ml-2 inline-block'>{isLoadingLabel}</span>}
                 </>
               ) : (
