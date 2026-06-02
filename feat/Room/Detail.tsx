@@ -7,8 +7,8 @@ import type { ConnectionDetails } from '@/feat/types'
 import type { LocalUserChoicesPassword } from '@/feat/PreJoin'
 import { useEffect, useRef, useState } from 'react'
 import { RoomContent, RoomConference } from '@/feat/Room'
-import { PreJoin } from '@/feat/PreJoin'
 import { InterceptorRoom } from '@/feat/PreJoin/Interceptor'
+import { PreJoin } from '@/feat/PreJoin'
 import { ConnectionInterceptor } from '@/feat/enum'
 
 const LIVEKIT_CSS_ENABLE = true

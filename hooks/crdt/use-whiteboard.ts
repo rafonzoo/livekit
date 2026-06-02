@@ -7,10 +7,10 @@ import { useRoomContext } from '@livekit/components-react'
 import { LiveKitYjsProvider } from '@/feat/Realtime/LiveKitYjsProvider'
 import { LiveKitKey } from '@/feat/enum'
 
-export function useWhiteboard(options?: { onReady?: () => void }) {
+export function useWhiteboard(onReady?: () => void) {
   const room = useRoomContext()
   const ydocRef = useRef<Y.Doc | null>(null)
-  const onReadyRef = useRef(options?.onReady)
+  const onReadyRef = useRef(onReady)
   const providerRef = useRef<LiveKitYjsProvider | null>(null)
   const storeRef = useRef(createTLStore({ shapeUtils: defaultShapeUtils }))
 

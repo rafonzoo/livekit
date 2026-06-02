@@ -11,23 +11,23 @@ import {
   YoutubeLogoIcon,
 } from '@phosphor-icons/react'
 import {
-  AiMagicFreeIcons,
+  AiMagicIcon,
   Analytics01Icon,
   HugeIcon,
   LiveStreaming03Icon,
-  Settings02FreeIcons,
-  ToolsFreeIcons,
-  UserMultiple02FreeIcons,
+  Settings02Icon,
+  ToolsIcon,
+  UserMultiple02Icon,
 } from '@/components/HugeIcon'
 
 export const TabsRoomIcon: FC<{ name: TabsRoomToolsIconKey }> = ({ name }) => {
   // prettier-ignore
   switch (name) {
-    case 'tools':     return <HugeIcon size={22} icon={ToolsFreeIcons} />
-    case 'multiple':  return <HugeIcon size={22} icon={UserMultiple02FreeIcons} />
+    case 'tools':     return <HugeIcon size={22} icon={ToolsIcon} />
+    case 'multiple':  return <HugeIcon size={22} icon={UserMultiple02Icon} />
     case 'chat':      return <ChatIcon size={22} />
-    case 'magic':     return <HugeIcon size={22} icon={AiMagicFreeIcons} />
-    case 'settings':  return <HugeIcon size={22} icon={Settings02FreeIcons} />
+    case 'magic':     return <HugeIcon size={22} icon={AiMagicIcon} />
+    case 'settings':  return <HugeIcon size={22} icon={Settings02Icon} />
     default:          return null
   }
 }

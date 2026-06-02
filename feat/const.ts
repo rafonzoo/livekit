@@ -2,7 +2,6 @@ import type { TabProps } from '@/feat/types'
 import { TabsChats, TabsMeeting, TabsParticipant, TabsPersonalize, TabsSettings } from '@/feat/Tabs'
 import { GroupCode, GroupsCode } from '@/feat/enum'
 import { WatchYoutube } from '@/feat/Channel/WatchYoutube'
-import { SharedNotes } from '@/feat/Channel/SharedNotes'
 import { Polling } from '@/feat/Channel/Polling'
 
 export const ChunkSize = 60_000
@@ -32,19 +31,12 @@ export const RoomTabs = [
   {
     id: 11,
     parentId: 1,
-    content: () => SharedNotes,
-    hide: false,
-    description: 'Berbagi catatan',
-  },
-  {
-    id: 12,
-    parentId: 1,
     content: () => Polling,
     hide: false,
     description: 'Pendapat',
   },
   {
-    id: 13,
+    id: 12,
     parentId: 1,
     content: () => WatchYoutube,
     hide: false,
@@ -79,7 +71,7 @@ export const RoomTabsTools = [
     id: 1,
     title: 'Perangkat rapat',
     icon: 'tools' as const,
-    tabIds: [1, 11, 12, 13],
+    tabIds: [1, 11, 12],
   },
   {
     id: 2,
