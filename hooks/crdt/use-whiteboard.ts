@@ -1,86 +1,42 @@
-import type { HistoryEntry, TLDefaultColorStyle, TLRecord } from 'tldraw'
-import type { AwarenessState } from '@/feat/Realtime/LiveKitYjsProvider'
-import { useEffect, useRef } from 'react'
+import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types'
+import { useRef, useEffect, useState } from 'react'
 import * as Y from 'yjs'
-import { createTLStore, DefaultColorStyle, defaultShapeUtils } from 'tldraw'
+import { ExcalidrawBinding, yjsToExcalidraw } from '@mizuka-wu/y-excalidraw'
 import { useRoomContext } from '@livekit/components-react'
 import { LiveKitYjsProvider } from '@/feat/Realtime/LiveKitYjsProvider'
-import { LiveKitKey } from '@/feat/enum'
 
 export function useWhiteboard(onReady?: () => void) {
+  const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null)
+  const excalidrawRef = useRef<HTMLDivElement | null>(null)
   const room = useRoomContext()
-  const ydocRef = useRef<Y.Doc | null>(null)
   const onReadyRef = useRef(onReady)
+  const yElementsRef = useRef<Y.Array<Y.Map<unknown>>>(undefined)
+  const ydocRef = useRef(new Y.Doc())
   const providerRef = useRef<LiveKitYjsProvider | null>(null)
-  const storeRef = useRef(createTLStore({ shapeUtils: defaultShapeUtils }))
+  const bindingRef = useRef<ExcalidrawBinding | null>(null)
 
   useEffect(() => {
-    const ydoc = new Y.Doc()
-    const yRecords = ydoc.getMap<TLRecord>(LiveKitKey.TLDrawRecord)
+    if (!api) return
+
+    const ydoc = ydocRef.current
+    const yElements = ydoc.getArray<Y.Map<unknown>>('elements')
+    const yAssets = ydoc.getMap('assets')
     const provider = new LiveKitYjsProvider(ydoc, room)
-    const store = storeRef.current
 
-    ydocRef.current = ydoc
     providerRef.current = provider
-
-    // ── Yjs → TLDraw ─────────────────────────────────────────────────────
-    // Observe changes in Y.Map and apply them to the TLDraw store
-    const observeYjs = (event: Y.YMapEvent<TLRecord>) => {
-      if (event.transaction.origin === 'tldraw') return
-
-      store.mergeRemoteChanges(() => {
-        event.changes.keys.forEach((change, key) => {
-          if (change.action === 'delete') {
-            store.remove([key as TLRecord['id']])
-          } else {
-            const record = yRecords.get(key)
-            if (record) store.put([record])
-          }
-        })
-      })
-    }
-
-    yRecords.observe(observeYjs)
+    bindingRef.current = new ExcalidrawBinding(yElements, yAssets, api, provider.awareness)
     onReadyRef.current?.()
 
-    // ── TLDraw → Yjs ─────────────────────────────────────────────────────
-    // Listen to TLDraw store changes and sync them to the Y.Map
-    const unsubscribeTldraw = store.listen(
-      ({ changes, source }: HistoryEntry<TLRecord>) => {
-        if (source !== 'user') return
-
-        // Use 'tldraw' as origin so observeYjs doesn't re-apply to the store
-        ydoc.transact(() => {
-          Object.values(changes.added).forEach((r) => yRecords.set(r.id, r))
-          Object.values(changes.updated).forEach(([, r]) => yRecords.set(r.id, r))
-          Object.values(changes.removed).forEach((r) => yRecords.delete(r.id))
-        }, 'tldraw')
-      },
-      { scope: 'document' }
-    )
-
     return () => {
-      yRecords.unobserve(observeYjs)
-      unsubscribeTldraw()
+      bindingRef.current?.destroy()
       provider.destroy()
-      ydoc.destroy()
     }
-  }, [room])
+  }, [api, room])
 
-  useEffect(() => {
-    if (providerRef.current) {
-      const { color } = providerRef.current.awareness.getLocalState() as AwarenessState
-      let palette: TLDefaultColorStyle = 'green'
-
-      try {
-        palette = DefaultColorStyle.validate(color.tldraw)
-      } catch (e) {
-        console.warn('Color key is ignored. TLDraw might update their color enum.', e)
-      }
-
-      DefaultColorStyle.setDefaultValue(palette)
-    }
-  }, [])
-
-  return { store: storeRef.current, provider: providerRef.current }
+  return {
+    binding: bindingRef.current,
+    setApi,
+    excalidrawRef,
+    initialData: { elements: yElementsRef.current ? yjsToExcalidraw(yElementsRef.current) : [] },
+  }
 }
