@@ -21,6 +21,7 @@ export enum ParticipantAttribute {
   ScreenActive = 'SCREEN_ACTIVE',
   ScreenActiveHost = 'SCREEN_ACTIVE_HOST',
   ScreenActiveUrl = 'SCREEN_ACTIVE_URL',
+  HandRaised = 'HAND_RAISED',
 }
 
 export enum ConnectionInterceptor {

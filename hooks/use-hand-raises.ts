@@ -1,57 +1,47 @@
-import type { Room } from 'livekit-client'
-import { useState, useEffect } from 'react'
-import { RoomEvent } from 'livekit-client'
-import { decoder, encoder } from '@/lib/utils'
+import { useCallback, useMemo } from 'react'
+import { useLocalParticipant, useParticipants } from '@livekit/components-react'
+import { ParticipantAttribute } from '@/feat/enum'
 
-export interface HandRaiseEventOption {
-  action: string
-  participantId?: string
-  targetParticipantId?: string
+export interface RaisedHandUser {
+  identity: string
+  name: string
+  isMe: boolean
 }
 
-export function useHandRaises<T extends HandRaiseEventOption>(room: Room) {
-  const [handRaises, setHandRaises] = useState<string[]>([])
-  const [isHandRaised, setIsHandRaised] = useState(false)
+export function useHandRaises() {
+  const { localParticipant } = useLocalParticipant()
+  const participants = useParticipants()
 
-  const handleHandRaise = (attributes: T) => {
-    const payload = encoder.encode(JSON.stringify(attributes))
+  const isRaised = localParticipant.attributes?.[ParticipantAttribute.HandRaised] === 'true'
 
-    room.localParticipant
-      .publishData(payload, { reliable: true })
-      .catch((error) => console.error(`Error when handle "${attributes.action}"`, error))
-      .then(() => {
-        // This will listened only by you (not anyone in the room)
-        // prettier-ignore
-        switch (attributes.action) {
-          case 'hand_raise': return setIsHandRaised(true)
-          case 'lower_hand': return setHandRaises(
-            (prev) => prev.filter((sid) => sid !== attributes.targetParticipantId)
-          )
-        }
-      })
-  }
-
-  // Sync hand raise from admin
-  useEffect(() => {
-    room.on(RoomEvent.DataReceived, (payload) => {
-      const message: T = JSON.parse(decoder.decode(payload as never))
-
-      // This will listened by everyone in the room
-      switch (message.action) {
-        case 'hand_raise': {
-          return setHandRaises((prev) =>
-            Array.from(new Set([...prev, message.participantId ?? ''].filter(Boolean)))
-          )
-        }
-
-        case 'lower_hand': {
-          setHandRaises((prev) => prev.filter((sid) => sid !== message.targetParticipantId))
-          setIsHandRaised(false)
-          return
-        }
-      }
+  const toggleHand = useCallback(async () => {
+    await localParticipant.setAttributes({
+      [ParticipantAttribute.HandRaised]: String(!isRaised),
     })
-  }, [room])
+  }, [localParticipant, isRaised])
+  const raisedHands = useMemo(() => {
+    const all = [localParticipant, ...participants]
 
-  return { handRaises, isHandRaised, handleHandRaise }
+    const list = all
+      .filter((p) => p.attributes?.[ParticipantAttribute.HandRaised] === 'true')
+      .map((p) => ({
+        identity: p.identity,
+        name: p.name ?? p.identity,
+        isMe: p.identity === localParticipant.identity,
+      }))
+
+    list.sort((a, b) => {
+      if (a.isMe) return -1
+      if (b.isMe) return 1
+      return 0
+    })
+
+    return new Map(list.map((user) => [user.identity, user]))
+  }, [participants, localParticipant])
+
+  return {
+    isRaised,
+    raisedHands,
+    toggleHand,
+  }
 }

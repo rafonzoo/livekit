@@ -2,7 +2,13 @@
 
 import type { FC, ReactNode } from 'react'
 import { ConnectionState } from 'livekit-client'
-import { MonitorPlayIcon, PhoneSlashIcon, SmileyIcon } from '@phosphor-icons/react'
+import {
+  HandFistIcon,
+  HandIcon,
+  MonitorPlayIcon,
+  PhoneSlashIcon,
+  SmileyIcon,
+} from '@phosphor-icons/react'
 import {
   MicDisabledIcon,
   CameraDisabledIcon,
@@ -11,7 +17,7 @@ import {
   useRoomContext,
   useConnectionState,
 } from '@livekit/components-react'
-import { useParamsState, useMediaControls } from '@/hooks'
+import { useParamsState, useMediaControls, useHandRaises } from '@/hooks'
 import { ToggleTrack } from '@/components/ToggleTrack'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { ButtonIcon } from '@/components/Button'
@@ -28,6 +34,7 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
     handleToggleShareScreen,
   } = useMediaControls({ room })
   const state = useConnectionState(room)
+  const { isRaised, toggleHand } = useHandRaises()
 
   if (state === ConnectionState.Connecting) {
     return null
@@ -56,13 +63,16 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
           <HugeIcon icon={ChevronUp} strokeWidth={2} />
         </button>
       </div>
-      {children}
       <ButtonIcon isActive={shareScreenEnabled} onClick={handleToggleShareScreen}>
         <MonitorPlayIcon weight='fill' size={22} />
       </ButtonIcon>
       <ButtonIcon isActive>
         <SmileyIcon weight='fill' size={24} />
       </ButtonIcon>
+      <ButtonIcon isActive={isRaised} onClick={toggleHand}>
+        {isRaised ? <HandFistIcon weight='fill' size={20} /> : <HandIcon weight='fill' size={20} />}
+      </ButtonIcon>
+      {children}
       <ButtonIcon onClick={() => router.replace('/')}>
         <PhoneSlashIcon weight='fill' size={20} />
       </ButtonIcon>
