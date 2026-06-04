@@ -13,10 +13,13 @@ export const Whiteboard: FC<{ onReady?: () => void }> = ({ onReady }) => {
   return (
     <div ref={excalidrawRef} className='absolute inset-0'>
       <Excalidraw
-        initialData={initialData} // Need to set the initial data
+        initialData={{
+          ...initialData,
+        }} // Need to set the initial data
         excalidrawAPI={setApi}
         onPointerUpdate={binding?.onPointerUpdate}
         theme='light'
+        UIOptions={{ tools: { image: false } }}
       />
     </div>
   )
