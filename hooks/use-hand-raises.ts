@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useLocalParticipant, useParticipants } from '@livekit/components-react'
-import { ParticipantAttribute } from '@/feat/enum'
+import { useDataChannel } from './use-data-channel'
+import { LiveKitAction, ParticipantAttribute } from '@/feat/enum'
 
 export interface RaisedHandUser {
   identity: string
@@ -10,38 +11,61 @@ export interface RaisedHandUser {
 
 export function useHandRaises() {
   const { localParticipant } = useLocalParticipant()
-  const participants = useParticipants()
+  const remoteParticipants = useParticipants()
 
-  const isRaised = localParticipant.attributes?.[ParticipantAttribute.HandRaised] === 'true'
+  const isRaised = useMemo(() => {
+    return localParticipant.attributes?.[ParticipantAttribute.HandRaised] === 'true'
+  }, [localParticipant.attributes])
 
-  const toggleHand = useCallback(async () => {
-    await localParticipant.setAttributes({
-      [ParticipantAttribute.HandRaised]: String(!isRaised),
-    })
-  }, [localParticipant, isRaised])
+  const setHandStatus = useCallback(
+    async (shouldRaise: boolean) => {
+      try {
+        await localParticipant.setAttributes({
+          [ParticipantAttribute.HandRaised]: String(shouldRaise),
+        })
+      } catch (error) {
+        console.error('Failed to update hand raise attribute:', error)
+      }
+    },
+    [localParticipant]
+  )
+
+  const { send } = useDataChannel<string>(LiveKitAction.HAND_RAISED, ({ payload }) => {
+    const targetLower = remoteParticipants.map((p) => p.identity).includes(payload ?? '')
+    if (targetLower) {
+      setHandStatus(false)
+    }
+  })
+
   const raisedHands = useMemo(() => {
-    const all = [localParticipant, ...participants]
+    const listMap = new Map<string, RaisedHandUser>()
 
-    const list = all
-      .filter((p) => p.attributes?.[ParticipantAttribute.HandRaised] === 'true')
-      .map((p) => ({
-        identity: p.identity,
-        name: p.name ?? p.identity,
-        isMe: p.identity === localParticipant.identity,
-      }))
+    const uniqueParticipants = Array.from(new Set([localParticipant, ...remoteParticipants]))
 
-    list.sort((a, b) => {
-      if (a.isMe) return -1
-      if (b.isMe) return 1
-      return 0
+    uniqueParticipants.forEach((p) => {
+      if (p.attributes?.[ParticipantAttribute.HandRaised] === 'true') {
+        const isMe = p.identity === localParticipant.identity
+
+        listMap.set(p.identity, {
+          identity: p.identity,
+          name: p.name ?? p.identity,
+          isMe,
+        })
+      }
     })
 
-    return new Map(list.map((user) => [user.identity, user]))
-  }, [participants, localParticipant])
+    return listMap
+  }, [remoteParticipants, localParticipant])
+
+  const raiseHand = () => setHandStatus(true)
+  const lowerHand = (identity: string) => send(identity)
+  const toggleHand = () => setHandStatus(!isRaised)
 
   return {
     isRaised,
     raisedHands,
+    raiseHand,
+    lowerHand,
     toggleHand,
   }
 }

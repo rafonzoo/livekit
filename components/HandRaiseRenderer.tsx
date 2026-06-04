@@ -1,8 +1,9 @@
 import { HandIcon } from '@phosphor-icons/react'
+import { Button } from './Button'
 import { useHandRaises } from '@/hooks/use-hand-raises'
 
 export function HandRaiseRenderer() {
-  const { raisedHands } = useHandRaises()
+  const { raisedHands, lowerHand } = useHandRaises()
 
   if (raisedHands.size === 0) return null
 
@@ -24,11 +25,17 @@ export function HandRaiseRenderer() {
         {Array.from(raisedHands.values()).map((user) => (
           <div
             key={user.identity}
-            className='flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-neutral-300 hover:bg-neutral-700/50'
+            className='flex items-center justify-between gap-2.5 rounded-lg px-2 py-1.5 text-sm text-neutral-300'
           >
-            <HandIcon size={16} weight='fill' className='shrink-0 text-amber-500' />
-
-            <span className='truncate font-medium'>{user.isMe ? `Kamu` : user.name}</span>
+            <p className='flex items-center gap-2.5'>
+              <HandIcon size={16} weight='fill' className='shrink-0 text-amber-500' />
+              <span className='truncate font-medium'>{user.isMe ? `Kamu` : user.name}</span>
+            </p>
+            {!user.isMe && (
+              <Button className='p-1 px-2 text-xs' onClick={() => lowerHand(user.identity)}>
+                Turunkan
+              </Button>
+            )}
           </div>
         ))}
       </div>
