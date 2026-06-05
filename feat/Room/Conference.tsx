@@ -87,7 +87,7 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
 
     let mounted = true
 
-    ;(async () => {
+    async function connect() {
       try {
         await room.connect(serverUrl, participantToken, {
           autoSubscribe: true,
@@ -102,10 +102,12 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
         if (propsRef.current.userChoices.audioEnabled) {
           await room.localParticipant.setMicrophoneEnabled(true)
         }
-      } catch (err) {
-        error(err)
+      } catch (e) {
+        console.warn(e)
       }
-    })()
+    }
+
+    connect()
 
     return () => {
       mounted = false

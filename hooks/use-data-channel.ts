@@ -5,8 +5,8 @@ import type {
   RemoteParticipant,
 } from 'livekit-client'
 import type { LiveKitAction } from '@/feat/enum'
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
-import { RoomEvent } from 'livekit-client'
+import { useEffect, useEffectEvent, useState } from 'react'
+import { ConnectionState, RoomEvent } from 'livekit-client'
 import { useRoomContext } from '@livekit/components-react'
 import { decoder, encoder, loginfo } from '@/lib/utils'
 
@@ -25,26 +25,38 @@ export function useDataChannel<P>(
       _topic?: string,
       _encryptionType?: Encryption_Type
     ) => {
-      const { action, payload } = JSON.parse(decoder.decode(data)) as {
-        action: LiveKitAction
-        payload: P
-      }
+      try {
+        const rawString = decoder.decode(data)
 
-      if (!participant) return
+        // Invalid json parse
+        if (!rawString.trim().startsWith('{')) {
+          return
+        }
 
-      if (payload && action === action) {
-        loginfo(`Receiving action "${action}"`, payload)
-        onMessage({ payload, participant })
+        const { action: current, payload } = JSON.parse(decoder.decode(data)) as {
+          action: LiveKitAction
+          payload: P
+        }
+
+        if (!participant) return
+
+        if (current === action) {
+          loginfo(`Receiving action "${action}"`, payload)
+          onMessage({ payload, participant })
+        }
+      } catch (e) {
+        console.log(e)
       }
     }
   )
 
-  const send = useRef((payload?: P, options?: DataPublishOptions) => {
+  const send = (payload?: P, options?: DataPublishOptions) => {
+    if (room.state !== ConnectionState.Connected) return
     setMessage(payload)
 
     loginfo(`Requesting action "${action}"`, payload)
     room.localParticipant.publishData(encoder.encode(JSON.stringify({ action, payload })), options)
-  })
+  }
 
   useEffect(() => {
     room.on(RoomEvent.DataReceived, handleData)
@@ -53,5 +65,5 @@ export function useDataChannel<P>(
     }
   }, [room])
 
-  return { message, send: send.current }
+  return { message, send }
 }

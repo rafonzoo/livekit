@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { HandFistIcon, HandIcon } from '@phosphor-icons/react'
-import { Button, ButtonIcon } from './Button'
-import { useHandRaises } from '@/hooks/use-hand-raises'
+import { useHandRaises } from '@/hooks'
+import { Button, ButtonIcon } from '@/components/Button'
 
 export const HandRaiseDialog: FC = () => {
   const { raisedHands, lowerHand } = useHandRaises()
