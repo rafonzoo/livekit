@@ -11,7 +11,6 @@ export interface RaisedHandUser {
 export function useHandRaises() {
   const { localParticipant } = useLocalParticipant()
   const remoteParticipants = useParticipants()
-
   const isRaised = localParticipant.attributes?.[ParticipantAttribute.HandRaised] === 'true'
 
   const setHandStatus = async (shouldRaise: boolean) => {
@@ -33,7 +32,6 @@ export function useHandRaises() {
 
   const raisedHands = () => {
     const listMap = new Map<string, RaisedHandUser>()
-
     const uniqueParticipants = Array.from(new Set([localParticipant, ...remoteParticipants]))
 
     uniqueParticipants.forEach((p) => {

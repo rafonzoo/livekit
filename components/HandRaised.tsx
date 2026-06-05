@@ -1,11 +1,14 @@
-import { HandIcon } from '@phosphor-icons/react'
-import { Button } from './Button'
+import type { FC } from 'react'
+import { HandFistIcon, HandIcon } from '@phosphor-icons/react'
+import { Button, ButtonIcon } from './Button'
 import { useHandRaises } from '@/hooks/use-hand-raises'
 
-export function HandRaiseRenderer() {
+export const HandRaiseDialog: FC = () => {
   const { raisedHands, lowerHand } = useHandRaises()
 
-  if (raisedHands.size === 0) return null
+  if (!raisedHands.size) {
+    return null
+  }
 
   return (
     <div className='fixed bottom-20 left-6 z-50 flex max-h-70 w-64 flex-col rounded-xl border border-neutral-700 bg-neutral-800 p-3 shadow-2xl'>
@@ -13,14 +16,11 @@ export function HandRaiseRenderer() {
         <div className='flex h-6 w-6 items-center justify-center rounded-full bg-amber-950 text-amber-400'>
           <HandIcon size={14} weight='fill' />
         </div>
-
         <span>Angkat tangan</span>
-
         <span className='ml-auto rounded-full bg-neutral-700 px-2 py-0.5 text-xs font-semibold text-neutral-400'>
           {raisedHands.size}
         </span>
       </div>
-
       <div className='mt-2 flex flex-col gap-0.5 overflow-y-auto pr-1'>
         {Array.from(raisedHands.values()).map((user) => (
           <div
@@ -40,5 +40,15 @@ export function HandRaiseRenderer() {
         ))}
       </div>
     </div>
+  )
+}
+
+export const HandRaisedIcon: FC = () => {
+  const { isRaised, toggleHand } = useHandRaises()
+
+  return (
+    <ButtonIcon isActive={isRaised} onClick={toggleHand}>
+      {isRaised ? <HandFistIcon weight='fill' size={20} /> : <HandIcon weight='fill' size={20} />}
+    </ButtonIcon>
   )
 }
