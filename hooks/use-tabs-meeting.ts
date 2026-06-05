@@ -18,7 +18,7 @@ export function useTabsMeeting() {
   const room = useRoomContext()
   const { screen, record, startRecording, stopRecording, startActiveScreen, stopActiveScreen } =
     useRoomState()
-  const { openTabsPolling } = useParamsState()
+  const { openTabsPolling, openTabsSharedNotes } = useParamsState()
 
   function handleToggleActiveScreen(id: ScreenID) {
     return async (e: MouseEvent<HTMLButtonElement>) => {
@@ -61,11 +61,7 @@ export function useTabsMeeting() {
 
     switch (list.id) {
       case GroupCode.ShareNote:
-        // prop = { ...prop, handle: openTabsSharedNotes }
-        prop = {
-          code: ScreenCode.SharingNotes,
-          handle: handleToggleActiveScreen(ScreenCode.SharingNotes),
-        }
+        prop = { ...prop, handle: openTabsSharedNotes }
         break
       case GroupCode.Polling:
         prop = { ...prop, handle: openTabsPolling }

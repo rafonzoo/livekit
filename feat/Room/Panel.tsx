@@ -1,12 +1,13 @@
 'use client'
 
 import type { ComponentProps, FC } from 'react'
-import { Activity } from 'react'
 import { ConnectionState } from 'livekit-client'
 import { ArrowLeftIcon, XIcon } from '@phosphor-icons/react'
 import { useConnectionState, useRoomContext } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
 import { useParamsState } from '@/hooks'
+import { SharingNoteWrapper } from '@/feat/Realtime/SharingNoteWrapper'
+import { TabsCode } from '@/feat/enum'
 import { RoomTabsTools, RoomTabs } from '@/feat/const'
 
 export const RoomPanel: FC<ComponentProps<'aside'>> = ({ className, children, ...props }) => {
@@ -16,17 +17,15 @@ export const RoomPanel: FC<ComponentProps<'aside'>> = ({ className, children, ..
   const currentTab = RoomTabs.find(({ id }) => id === tabsCode)
   const parentId = currentTab?.parentId
   const hasChild = !!parentId
-  const SubTabsComponent = currentTab?.content?.() ?? (() => null)
   const state = useConnectionState(room)
-
-  if (state === ConnectionState.Connecting || !isPanelActive) {
-    return null
-  }
+  const isConnecting = state === ConnectionState.Connecting
 
   return (
     <aside
+      inert={isConnecting || !isPanelActive}
       className={cn(
-        'fixed top-3 right-3 bottom-16 left-3 z-10 flex flex-col overflow-auto rounded-md border shadow md:left-auto md:w-100 md:max-w-100',
+        'fixed top-3 right-3 bottom-16 left-3 z-10 flex flex-col overflow-x-hidden overflow-y-auto rounded-md border shadow md:left-auto md:w-100 md:max-w-100',
+        (isConnecting || !isPanelActive) && 'hidden',
         className
       )}
       {...props}
@@ -57,14 +56,14 @@ export const RoomPanel: FC<ComponentProps<'aside'>> = ({ className, children, ..
       </div>
       <div
         className={cn(
-          'grid grow auto-cols-[100%] grid-flow-col transition-transform *:min-w-full *:p-5',
+          'grid grow auto-cols-[100%] grid-flow-col transition-transform duration-300 *:min-w-full *:p-5',
           hasChild ? '-translate-x-full' : 'translate-none'
         )}
       >
-        {children}
-        <Activity mode={hasChild ? 'visible' : 'hidden'}>
-          <SubTabsComponent />
-        </Activity>
+        {hasChild && <div></div>}
+        {TabsCode.TabsMeetingSharedNotes !== tabsCode && children}
+
+        {state !== ConnectionState.Connecting && <SharingNoteWrapper />}
       </div>
     </aside>
   )

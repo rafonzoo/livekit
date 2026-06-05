@@ -163,7 +163,7 @@ export const useSharingNotesToolbar = (
       if (isInList(type)) {
         run(liftListItem(schema.nodes.list_item))
       } else {
-        run(wrapInList(schema.nodes.ordered_list))
+        run(wrapInList(schema.nodes[type]))
       }
     }
 

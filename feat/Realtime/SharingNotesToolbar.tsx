@@ -49,7 +49,7 @@ export const ToolbarEditor: FC<ToolbarEditorProps> = ({ getView, editorEl }) => 
   } = useSharingNotesToolbar(getView, editorEl)
 
   return (
-    <div className='flex flex-wrap items-center gap-0.5 border-b border-gray-200 bg-white px-3 py-1.5 pr-29'>
+    <div className='flex flex-wrap items-center gap-0.5 border-b border-gray-200 bg-white px-3 py-1.5 pr-2.5'>
       {/* Bold / Italic */}
       <ToolbarButton
         label={<TextBolderIcon weight='bold' size={18} />}
