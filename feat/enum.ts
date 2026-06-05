@@ -14,7 +14,9 @@ export enum LiveKitAction {
   SnapshotReply = 'SNAPSHOT_REPLY',
   YoutubeUpdate = 'YOUTUBE_UPDATE',
   PresentationUpdate = 'PRESENTATION_UPDATE',
-  HAND_RAISED = 'HAND_RAISED',
+  HandRaisedUpper = 'HANDRAISED_UPPER',
+  HandRaisedLower = 'HANDRAISED_LOWER',
+  MicrophoneUpdate = 'MICROPHONE_UPDATE',
 }
 
 export enum ParticipantAttribute {
