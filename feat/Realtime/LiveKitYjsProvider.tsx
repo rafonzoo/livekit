@@ -1,7 +1,7 @@
 import type { Room } from 'livekit-client'
 import * as Y from 'yjs'
 import { Awareness } from 'y-protocols/awareness'
-import { RoomEvent } from 'livekit-client'
+import { ConnectionState, RoomEvent } from 'livekit-client'
 import {
   publishChunked,
   decodeChunkHeader,
@@ -164,6 +164,7 @@ export class LiveKitYjsProvider<T extends object = TLDrawCursor> {
   }
 
   private _requestInitialState() {
+    if (this.room.state !== ConnectionState.Connected) return
     const stateVector = Y.encodeStateVector(this.doc)
     const msg = encodeMessage(stateVector, MessageType.StateVector)
     publishChunked(this.room.localParticipant, msg, {

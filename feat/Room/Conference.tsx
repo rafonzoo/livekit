@@ -71,7 +71,6 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
 
   useEffect(() => {
     const { serverUrl, participantToken } = propsRef.current.connectionDetails
-    const { localParticipant } = room
     const { leave, error } = roomEvent.current
 
     room.on(RoomEvent.Disconnected, leave)
@@ -86,21 +85,39 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
       }
     })
 
-    room.connect(serverUrl, participantToken, { autoSubscribe: true }).catch(error)
+    let mounted = true
 
-    if (propsRef.current.userChoices.videoEnabled) {
-      localParticipant.setCameraEnabled(true).catch(error)
-    }
+    ;(async () => {
+      try {
+        await room.connect(serverUrl, participantToken, {
+          autoSubscribe: true,
+        })
 
-    if (propsRef.current.userChoices.audioEnabled) {
-      localParticipant.setMicrophoneEnabled(true).catch(error)
-    }
+        if (!mounted) return
+
+        if (propsRef.current.userChoices.videoEnabled) {
+          await room.localParticipant.setCameraEnabled(true)
+        }
+
+        if (propsRef.current.userChoices.audioEnabled) {
+          await room.localParticipant.setMicrophoneEnabled(true)
+        }
+      } catch (err) {
+        error(err)
+      }
+    })()
 
     return () => {
+      mounted = false
+
       room.off(RoomEvent.Disconnected, leave)
       room.off(RoomEvent.MediaDevicesError, error)
 
-      if (room.state === ConnectionState.Connected) {
+      if (
+        room.state === ConnectionState.Connected ||
+        room.state === ConnectionState.Connecting ||
+        room.state === ConnectionState.Reconnecting
+      ) {
         room.disconnect()
       }
     }

@@ -26,6 +26,9 @@ importers:
       '@livekit/components-styles':
         specifier: ^1.2.0
         version: 1.2.0
+      '@mizuka-wu/y-excalidraw':
+        specifier: ^2.0.16
+        version: 2.0.16(@excalidraw/excalidraw@0.18.1(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(yjs@13.6.31)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -589,6 +592,12 @@ packages:
 
   '@mermaid-js/parser@1.1.1':
     resolution: {integrity: sha512-VuHdsYMK1bT6X2JbcAaWAhugTRvRBRyuZgd+c22swUeI9g/ntaxF7CY7dYarhZovofCbUNO0G7JesfmNtjYOCw==}
+
+  '@mizuka-wu/y-excalidraw@2.0.16':
+    resolution: {integrity: sha512-xEsmLnpIhGpXH/oBUS+cocdXANluIecWi2JxQSUstQ3Ftq3IpAzY/TIcOOq/LS01n+vPwTfqHgbZ+UnsYmb3Zw==}
+    peerDependencies:
+      '@excalidraw/excalidraw': ^0.18.0
+      yjs: ^13.6.19
 
   '@napi-rs/canvas-android-arm64@0.1.100':
     resolution: {integrity: sha512-hjhCKhntPv9+t4ckHymdx0phYNcVW+GKQR6Lzw2zE+pOVjOplSmtx9nNNknTjbEDLcuLZqA1y8ufKg1XfgftzQ==}
@@ -4002,6 +4011,12 @@ snapshots:
   '@mermaid-js/parser@1.1.1':
     dependencies:
       '@chevrotain/types': 11.1.2
+
+  '@mizuka-wu/y-excalidraw@2.0.16(@excalidraw/excalidraw@0.18.1(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(yjs@13.6.31)':
+    dependencies:
+      '@excalidraw/excalidraw': 0.18.1(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      fractional-indexing: 3.2.0
+      yjs: 13.6.31
 
   '@napi-rs/canvas-android-arm64@0.1.100':
     optional: true
