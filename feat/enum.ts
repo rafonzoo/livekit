@@ -14,6 +14,9 @@ export enum LiveKitAction {
   SnapshotReply = 'SNAPSHOT_REPLY',
   YoutubeUpdate = 'YOUTUBE_UPDATE',
   PresentationUpdate = 'PRESENTATION_UPDATE',
+  HandRaisedUpper = 'HANDRAISED_UPPER',
+  HandRaisedLower = 'HANDRAISED_LOWER',
+  MicrophoneUpdate = 'MICROPHONE_UPDATE',
 }
 
 export enum ParticipantAttribute {
@@ -21,6 +24,7 @@ export enum ParticipantAttribute {
   ScreenActive = 'SCREEN_ACTIVE',
   ScreenActiveHost = 'SCREEN_ACTIVE_HOST',
   ScreenActiveUrl = 'SCREEN_ACTIVE_URL',
+  HandRaised = 'HAND_RAISED',
 }
 
 export enum ConnectionInterceptor {

@@ -14,6 +14,7 @@ import {
 import { useParamsState, useMediaControls } from '@/hooks'
 import { ToggleTrack } from '@/components/ToggleTrack'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
+import { HandRaisedIcon } from '@/components/HandRaised'
 import { ButtonIcon } from '@/components/Button'
 
 export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
@@ -56,13 +57,14 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
           <HugeIcon icon={ChevronUp} strokeWidth={2} />
         </button>
       </div>
-      {children}
       <ButtonIcon isActive={shareScreenEnabled} onClick={handleToggleShareScreen}>
         <MonitorPlayIcon weight='fill' size={22} />
       </ButtonIcon>
       <ButtonIcon isActive>
         <SmileyIcon weight='fill' size={24} />
       </ButtonIcon>
+      <HandRaisedIcon />
+      {children}
       <ButtonIcon onClick={() => router.replace('/')}>
         <PhoneSlashIcon weight='fill' size={20} />
       </ButtonIcon>
