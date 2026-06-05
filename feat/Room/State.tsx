@@ -1,10 +1,9 @@
 'use client'
 
-import type { Editor } from 'tldraw'
-import type { FC, ReactNode, RefObject } from 'react'
+import type { FC, ReactNode } from 'react'
 import type { RemoteParticipant } from 'livekit-client'
 import type { ScreenCode } from '@/feat/enum'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { RoomEvent } from 'livekit-client'
 import { useMaybeRoomContext } from '@livekit/components-react'
 import { loginfo, num } from '@/lib/utils'
@@ -26,8 +25,6 @@ export interface ScreenMessage {
 export interface StateContextProps {
   screen: ScreenMessage | null
   record: string | null
-  editorRef: RefObject<Editor | null>
-  viewerRef: RefObject<PresentationContext>
   isHost: boolean
   startActiveScreen: (code: ScreenID, url?: string) => Promise<void>
   stopActiveScreen: () => Promise<void>
@@ -42,12 +39,7 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
   const room = useMaybeRoomContext()
   const [screen, setScreen] = useState<StateContextProps['screen'] | null>(null)
   const [record, setRecord] = useState<StateContextProps['record'] | null>(null)
-  const editorRef = useRef<Editor | null>(null)
   const isHost = room?.localParticipant.identity === screen?.host
-  const viewerRef = useRef<PresentationContext>({
-    getSnapshot: () => 1,
-    loadSnapshot: () => void 0,
-  })
 
   const startRecording = async () => {
     if (!room?.localParticipant) return
@@ -161,8 +153,6 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
         screen,
         record,
         isHost,
-        editorRef,
-        viewerRef,
         startRecording,
         stopRecording,
         startActiveScreen,

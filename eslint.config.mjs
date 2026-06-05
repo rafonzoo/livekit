@@ -25,6 +25,7 @@ export default [
       'out/**',
       'build/**',
       'rules/**',
+      'misc/**',
       'next-env.d.ts',
       'eslint.config.{js,ts,mjs}',
     ],
