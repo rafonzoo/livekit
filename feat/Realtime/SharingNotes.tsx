@@ -16,3 +16,5 @@ export const SharingNotes: FC<{ onReady?: () => void }> = ({ onReady }) => {
     </div>
   )
 }
+
+export default SharingNotes

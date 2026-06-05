@@ -1,57 +1,59 @@
-import type { Room } from 'livekit-client'
-import { useState, useEffect } from 'react'
-import { RoomEvent } from 'livekit-client'
-import { decoder, encoder } from '@/lib/utils'
+import { useLocalParticipant, useParticipants } from '@livekit/components-react'
+import { useDataChannel } from '@/hooks'
+import { LiveKitAction, ParticipantAttribute } from '@/feat/enum'
 
-export interface HandRaiseEventOption {
-  action: string
-  participantId?: string
-  targetParticipantId?: string
+export interface RaisedHandUser {
+  identity: string
+  name: string
+  isMe: boolean
 }
 
-export function useHandRaises<T extends HandRaiseEventOption>(room: Room) {
-  const [handRaises, setHandRaises] = useState<string[]>([])
-  const [isHandRaised, setIsHandRaised] = useState(false)
+export function useHandRaises() {
+  const { localParticipant } = useLocalParticipant()
+  const remoteParticipants = useParticipants()
+  const isRaised = localParticipant.attributes?.[ParticipantAttribute.HandRaised] === 'true'
 
-  const handleHandRaise = (attributes: T) => {
-    const payload = encoder.encode(JSON.stringify(attributes))
-
-    room.localParticipant
-      .publishData(payload, { reliable: true })
-      .catch((error) => console.error(`Error when handle "${attributes.action}"`, error))
-      .then(() => {
-        // This will listened only by you (not anyone in the room)
-        // prettier-ignore
-        switch (attributes.action) {
-          case 'hand_raise': return setIsHandRaised(true)
-          case 'lower_hand': return setHandRaises(
-            (prev) => prev.filter((sid) => sid !== attributes.targetParticipantId)
-          )
-        }
+  const setHandStatus = async (shouldRaise: boolean) => {
+    try {
+      await localParticipant.setAttributes({
+        [ParticipantAttribute.HandRaised]: String(shouldRaise),
       })
+    } catch (error) {
+      console.error('Failed to update hand raise attribute:', error)
+    }
   }
 
-  // Sync hand raise from admin
-  useEffect(() => {
-    room.on(RoomEvent.DataReceived, (payload) => {
-      const message: T = JSON.parse(decoder.decode(payload as never))
+  const { send } = useDataChannel<string>(LiveKitAction.HandRaisedLower, () => {
+    // No need received payload, directed by `destinationIdentities`
+    setHandStatus(false)
+  })
 
-      // This will listened by everyone in the room
-      switch (message.action) {
-        case 'hand_raise': {
-          return setHandRaises((prev) =>
-            Array.from(new Set([...prev, message.participantId ?? ''].filter(Boolean)))
-          )
-        }
+  const raisedHands = () => {
+    const listMap = new Map<string, RaisedHandUser>()
+    const uniqueParticipants = Array.from(new Set([localParticipant, ...remoteParticipants]))
 
-        case 'lower_hand': {
-          setHandRaises((prev) => prev.filter((sid) => sid !== message.targetParticipantId))
-          setIsHandRaised(false)
-          return
-        }
+    uniqueParticipants.forEach(({ attributes, identity, name = '' }) => {
+      if (attributes?.[ParticipantAttribute.HandRaised] === 'true') {
+        listMap.set(identity, { identity, name, isMe: identity === localParticipant.identity })
       }
     })
-  }, [room])
 
-  return { handRaises, isHandRaised, handleHandRaise }
+    return listMap
+  }
+
+  const raiseHand = () => setHandStatus(true)
+  const toggleHand = () => setHandStatus(!isRaised)
+  const lowerHand = (identity: string) => {
+    if (localParticipant) {
+      send(identity, { reliable: false, destinationIdentities: [identity] })
+    }
+  }
+
+  return {
+    isRaised,
+    raisedHands: raisedHands(),
+    raiseHand,
+    lowerHand,
+    toggleHand,
+  }
 }

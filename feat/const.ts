@@ -1,6 +1,7 @@
 import type { TabProps } from '@/feat/types'
 import { TabsChats, TabsMeeting, TabsParticipant, TabsPersonalize, TabsSettings } from '@/feat/Tabs'
-import { GroupCode, GroupsCode } from '@/feat/enum'
+import { SharingNoteWrapper } from '@/feat/Realtime/SharingNoteWrapper'
+import { GroupCode, GroupsCode, TabsCode } from '@/feat/enum'
 import { WatchYoutube } from '@/feat/Channel/WatchYoutube'
 import { Polling } from '@/feat/Channel/Polling'
 
@@ -24,42 +25,49 @@ export const ColorPalette: { tldraw: string; hex: string }[] = [
 
 export const RoomTabs = [
   {
-    id: 1,
+    id: TabsCode.TabsMeeting,
     content: () => TabsMeeting,
     hide: false,
   },
   {
-    id: 11,
+    id: TabsCode.TabsMeetingSharedNotes,
+    parentId: 1,
+    content: () => SharingNoteWrapper,
+    hide: false,
+    description: 'Berbagi catatan',
+  },
+  {
+    id: TabsCode.TabsMeetingPolling,
     parentId: 1,
     content: () => Polling,
     hide: false,
     description: 'Pendapat',
   },
   {
-    id: 12,
+    id: TabsCode.TabsMeetingWatchYoutube,
     parentId: 1,
     content: () => WatchYoutube,
     hide: false,
     description: 'Bagikan video youtube',
   },
   {
-    id: 2,
+    id: TabsCode.TabsParticipant,
     content: () => TabsParticipant,
     hide: false,
   },
   {
-    id: 3,
+    id: TabsCode.TabsChats,
     content: () => TabsChats,
     hide: false,
     description: 'Semua orang',
   },
   {
-    id: 4,
+    id: TabsCode.TabsPersonalize,
     content: () => TabsPersonalize,
     hide: false,
   },
   {
-    id: 5,
+    id: TabsCode.TabsSettings,
     content: () => TabsSettings,
     hide: false,
     description: 'Gunakan pengaturan ini untuk mengatur rapat Anda.',
@@ -71,7 +79,8 @@ export const RoomTabsTools = [
     id: 1,
     title: 'Perangkat rapat',
     icon: 'tools' as const,
-    tabIds: [1, 11, 12],
+    // tabIds: [1, 11, 12, 13],
+    tabIds: Object.values(TabsCode).filter((code) => `${code}`.startsWith('1')),
   },
   {
     id: 2,
