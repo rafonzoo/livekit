@@ -4,11 +4,9 @@ import type { FC } from 'react'
 import type { VideoCodec } from 'livekit-client'
 import type { LocalUserChoices } from '@livekit/components-react'
 import type { ConnectionDetails } from '@/feat/types'
-import type { LocalUserChoicesPassword } from '@/feat/PreJoin'
+import type { LocalUserChoicesPassword } from '@/feat/Room'
 import { useEffect, useRef, useState } from 'react'
-import { RoomContent, RoomConference } from '@/feat/Room'
-import { InterceptorRoom } from '@/feat/PreJoin/Interceptor'
-import { PreJoin } from '@/feat/PreJoin'
+import { RoomContent, RoomConference, InterceptorRoom, PreJoin } from '@/feat/Room'
 import { ConnectionInterceptor } from '@/feat/enum'
 
 const LIVEKIT_CSS_ENABLE = true

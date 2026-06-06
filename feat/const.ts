@@ -1,9 +1,8 @@
 import type { TabProps } from '@/feat/types'
-import { TabsChats, TabsMeeting, TabsParticipant, TabsPersonalize, TabsSettings } from '@/feat/Tabs'
-import { SharingNoteWrapper } from '@/feat/Realtime/SharingNoteWrapper'
+import { TabsMeeting, TabsParticipant, TabsPersonalize, TabsSettings } from '@/feat/Tabs'
 import { GroupCode, GroupsCode, TabsCode } from '@/feat/enum'
-import { WatchYoutube } from '@/feat/Channel/WatchYoutube'
-import { Polling } from '@/feat/Channel/Polling'
+import { WatchYoutube } from '@/feat/Activity/WatchYoutube'
+import { Polling } from '@/feat/Activity/Polling'
 
 export const ChunkSize = 60_000
 
@@ -30,9 +29,9 @@ export const RoomTabs = [
     hide: false,
   },
   {
-    id: TabsCode.TabsMeetingSharedNotes,
+    id: TabsCode.TabsMeetingNotes,
     parentId: 1,
-    content: () => SharingNoteWrapper,
+    content: () => () => null,
     hide: false,
     description: 'Berbagi catatan',
   },
@@ -57,7 +56,7 @@ export const RoomTabs = [
   },
   {
     id: TabsCode.TabsChats,
-    content: () => TabsChats,
+    content: () => () => null,
     hide: false,
     description: 'Semua orang',
   },
@@ -79,8 +78,7 @@ export const RoomTabsTools = [
     id: 1,
     title: 'Perangkat rapat',
     icon: 'tools' as const,
-    // tabIds: [1, 11, 12, 13],
-    tabIds: Object.values(TabsCode).filter((code) => `${code}`.startsWith('1')),
+    tabIds: [1, 11, 12, 13],
   },
   {
     id: 2,
@@ -115,7 +113,7 @@ export const TabsContents = [
     hide: false,
     lists: [
       {
-        id: GroupCode.ShareNote,
+        id: GroupCode.Notes,
         icon: 'phosphor/notebook' as const,
         title: 'Berbagi catatan',
         description: 'Mencatat bersama - sama secara langsung',

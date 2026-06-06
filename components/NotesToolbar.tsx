@@ -4,28 +4,31 @@ import type { FC, ReactNode } from 'react'
 import type { EditorView } from 'prosemirror-view'
 import { toggleMark } from 'prosemirror-commands'
 import { ArrowLineDownIcon, TextBolderIcon, TextItalicIcon } from '@phosphor-icons/react'
-import { schema, useSharingNotesToolbar } from '@/hooks/crdt/use-sharing-notes'
+import { schema, useNotesToolbar } from '@/hooks/crdt/use-notes'
 import {
   HugeIcon,
   LeftToRightListBulletIcon,
   LeftToRightListNumberIcon,
 } from '@/components/HugeIcon'
 
-import '@/app/prose.css'
-
-export interface ToolbarEditorProps {
+export interface NotesToolbarEditorProps {
   getView: () => EditorView | null
   editorEl: HTMLElement | null
 }
 
-export interface ToolbarButtonProps {
+export interface NotesToolbarButtonProps {
   label: ReactNode
   title: string
   active?: boolean
   onMouseDown: (e: React.MouseEvent) => void
 }
 
-export const ToolbarButton: FC<ToolbarButtonProps> = ({ label, title, active, onMouseDown }) => (
+export const NotesToolbarButton: FC<NotesToolbarButtonProps> = ({
+  label,
+  title,
+  active,
+  onMouseDown,
+}) => (
   <button
     title={title}
     onMouseDown={onMouseDown}
@@ -37,7 +40,7 @@ export const ToolbarButton: FC<ToolbarButtonProps> = ({ label, title, active, on
   </button>
 )
 
-export const ToolbarEditor: FC<ToolbarEditorProps> = ({ getView, editorEl }) => {
+export const NotesToolbarEditor: FC<NotesToolbarEditorProps> = ({ getView, editorEl }) => {
   const {
     run,
     isHeading,
@@ -46,12 +49,12 @@ export const ToolbarEditor: FC<ToolbarEditorProps> = ({ getView, editorEl }) => 
     handleDownload,
     handleHeadingClosure,
     handleListTypeClosure,
-  } = useSharingNotesToolbar(getView, editorEl)
+  } = useNotesToolbar(getView, editorEl)
 
   return (
     <div className='flex flex-wrap items-center gap-0.5 border-b border-gray-200 bg-white px-3 py-1.5 pr-2.5'>
       {/* Bold / Italic */}
-      <ToolbarButton
+      <NotesToolbarButton
         label={<TextBolderIcon weight='bold' size={18} />}
         title='Bold'
         active={isMark(schema.marks.strong)}
@@ -60,7 +63,7 @@ export const ToolbarEditor: FC<ToolbarEditorProps> = ({ getView, editorEl }) => 
           run(toggleMark(schema.marks.strong))
         }}
       />
-      <ToolbarButton
+      <NotesToolbarButton
         label={<TextItalicIcon weight='bold' size={18} />}
         title='Italic'
         active={isMark(schema.marks.em)}
@@ -75,7 +78,7 @@ export const ToolbarEditor: FC<ToolbarEditorProps> = ({ getView, editorEl }) => 
 
       {/* Headings */}
       {([1, 2, 3] as const).map((level) => (
-        <ToolbarButton
+        <NotesToolbarButton
           key={level}
           label={`H${level}`}
           title={`Heading ${level}`}

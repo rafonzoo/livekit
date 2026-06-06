@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 import type { Transaction } from 'prosemirror-state'
 import type { MarkType } from 'prosemirror-model'
-import type { AwarenessState } from '@/feat/Realtime/LiveKitYjsProvider'
+import type { AwarenessState } from '@/lib/livekit-yjs-provider'
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
 import * as Y from 'yjs'
 import { ySyncPlugin, yUndoPlugin, yCursorPlugin } from 'y-prosemirror'
@@ -13,14 +13,14 @@ import { Schema } from 'prosemirror-model'
 import { exampleSetup } from 'prosemirror-example-setup'
 import { setBlockType } from 'prosemirror-commands'
 import { useRoomContext } from '@livekit/components-react'
-import { LiveKitYjsProvider } from '@/feat/Realtime/LiveKitYjsProvider'
+import { LiveKitYjsProvider } from '@/lib/livekit-yjs-provider'
 
 export const schema = new Schema({
   nodes: addListNodes(basicSchema.spec.nodes, 'paragraph block*', 'block'),
   marks: basicSchema.spec.marks,
 })
 
-export const useSharingNotes = ({ onReady }: { onReady?: () => void }) => {
+export const useNotes = ({ onReady }: { onReady?: () => void }) => {
   const room = useRoomContext()
   const editorRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -89,10 +89,7 @@ export const useSharingNotes = ({ onReady }: { onReady?: () => void }) => {
   return { viewRef, editorRef }
 }
 
-export const useSharingNotesToolbar = (
-  getView: () => EditorView | null,
-  editorEl: HTMLElement | null
-) => {
+export const useNotesToolbar = (getView: () => EditorView | null, editorEl: HTMLElement | null) => {
   // Re-render on every selection change so active states update
   const [, forceUpdate] = useState(0)
 

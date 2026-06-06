@@ -11,13 +11,13 @@ import { useRoomState } from '@/feat/Room/State'
 import { ScreenCode } from '@/feat/enum'
 import { Loading } from '@/components/Loading'
 
-const Whiteboard = dynamic(async () => (await import('@/feat/Realtime/Whiteboard')).Whiteboard, {
+const Whiteboard = dynamic(async () => (await import('@/feat/Activity/Whiteboard')).Whiteboard, {
   ssr: false,
   loading: () => <Loading />,
 })
 
 const WatchYoutube = dynamic(
-  async () => (await import('@/feat/Channel/WatchYoutube')).WatchYoutube,
+  async () => (await import('@/feat/Activity/WatchYoutube')).WatchYoutube,
   {
     ssr: false,
     loading: () => <Loading />,
@@ -25,20 +25,17 @@ const WatchYoutube = dynamic(
 )
 
 const Presentation = dynamic(
-  async () => (await import('@/feat/Channel/Presentation')).Presentation,
+  async () => (await import('@/feat/Activity/Presentation')).Presentation,
   {
     ssr: false,
     loading: () => <Loading />,
   }
 )
 
-const SharingNotes = dynamic(
-  async () => (await import('@/feat/Realtime/SharingNotes')).SharingNotes,
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  }
-)
+const Notes = dynamic(async () => (await import('@/feat/Activity/Notes')).Notes, {
+  ssr: false,
+  loading: () => <Loading />,
+})
 
 export interface RoomCanvasProps extends ComponentProps<'div'> {
   screenId: ScreenID
@@ -60,10 +57,10 @@ const config = {
     background: cn('bg-orange-500'),
     comp: Presentation,
   },
-  [ScreenCode.SharingNotes]: {
+  [ScreenCode.Notes]: {
     border: cn('border-yellow-400'),
     background: cn('bg-yellow-400'),
-    comp: SharingNotes,
+    comp: Notes,
   },
 }
 

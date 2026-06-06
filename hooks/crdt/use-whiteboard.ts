@@ -1,11 +1,11 @@
 import type { ExcalidrawImperativeAPI, ExcalidrawProps } from '@excalidraw/excalidraw/types'
-import type { AwarenessState } from '@/feat/Realtime/LiveKitYjsProvider'
+import type { AwarenessState } from '@/lib/livekit-yjs-provider'
 import { useRef, useEffect, useState } from 'react'
 import * as Y from 'yjs'
 import { ExcalidrawBinding, yjsToExcalidraw } from '@mizuka-wu/y-excalidraw'
 import { useRoomContext } from '@livekit/components-react'
 import { useRoomState } from '@/feat/Room'
-import { LiveKitYjsProvider } from '@/feat/Realtime/LiveKitYjsProvider'
+import { LiveKitYjsProvider } from '@/lib/livekit-yjs-provider'
 
 export function useWhiteboard(onReady?: () => void) {
   const { screen } = useRoomState()

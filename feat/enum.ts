@@ -50,12 +50,12 @@ export enum ScreenCode {
   Whiteboard = 2,
   Presentation = 3,
   WatchYoutube = 4,
-  SharingNotes = 5,
+  Notes = 5,
 }
 
 export enum TabsCode {
   TabsMeeting = 1,
-  TabsMeetingSharedNotes = 11,
+  TabsMeetingNotes = 11,
   TabsMeetingPolling = 12,
   TabsMeetingWatchYoutube = 13,
   TabsParticipant = 2,
@@ -72,7 +72,7 @@ export enum GroupsCode {
 }
 
 export enum GroupCode {
-  ShareNote = 1,
+  Notes = 1,
   Polling = 2,
   Whiteboard = 3,
   Presentation = 4,

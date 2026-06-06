@@ -6,17 +6,17 @@ import { useParamsState } from '@/hooks'
 import { TabsPersistence } from '@/feat/Tabs'
 import { Loading } from '@/components/Loading'
 
-const Chat = dynamic(async () => await import('@/feat/Activity/Chat'), {
+const Notes = dynamic(async () => await import('@/feat/Activity/Notes'), {
   ssr: false,
   loading: () => <Loading />,
 })
 
-export const TabsChat: FC = () => {
-  const { isTabsChats } = useParamsState()
+export const TabsNotes: FC = () => {
+  const { isTabsMeetingNotes } = useParamsState()
 
   return (
-    <TabsPersistence visible={isTabsChats}>
-      <Chat />
+    <TabsPersistence visible={isTabsMeetingNotes}>
+      <Notes />
     </TabsPersistence>
   )
 }
