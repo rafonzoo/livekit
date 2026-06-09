@@ -1,10 +1,21 @@
 import type { ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { default as utc } from 'dayjs/plugin/utc'
+import { default as timezone } from 'dayjs/plugin/timezone'
+import { default as dayjs } from 'dayjs'
 import { default as clsx } from 'clsx'
+
+dayjs.locale('id')
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 export const encoder = new TextEncoder()
 
 export const decoder = new TextDecoder()
+
+export function djs(val?: Parameters<typeof dayjs>[0]) {
+  return dayjs(val).tz('Asia/Jakarta')
+}
 
 export function encodePassphrase(passphrase: string) {
   return encodeURIComponent(passphrase)

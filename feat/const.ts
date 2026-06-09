@@ -1,8 +1,13 @@
 import type { TabProps } from '@/feat/types'
-import { TabsMeeting, TabsParticipant, TabsPersonalize, TabsSettings } from '@/feat/Tabs'
+import {
+  TabsPolling,
+  TabsMeeting,
+  TabsParticipant,
+  TabsPersonalize,
+  TabsSettings,
+} from '@/feat/Tabs'
 import { GroupCode, GroupsCode, TabsCode } from '@/feat/enum'
 import { WatchYoutube } from '@/feat/Activity/WatchYoutube'
-import { Polling } from '@/feat/Activity/Polling'
 
 export const ChunkSize = 60_000
 
@@ -38,7 +43,7 @@ export const RoomTabs = [
   {
     id: TabsCode.TabsMeetingPolling,
     parentId: 1,
-    content: () => Polling,
+    content: () => TabsPolling,
     hide: false,
     description: 'Pendapat',
   },
