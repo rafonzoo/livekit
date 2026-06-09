@@ -63,6 +63,7 @@ export const TabsListItemAction: FC<ComponentProps<'button'>> = ({
   return (
     <button
       type='button'
+      data-slot='tabs-list-item-action'
       {...props}
       onClick={(e) => onClick?.(e)}
       className={cn('absolute inset-0 rounded-md', !props.disabled && 'cursor-pointer', className)}

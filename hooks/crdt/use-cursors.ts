@@ -1,4 +1,4 @@
-import type { AwarenessState, LiveKitYjsProvider } from '@/feat/Realtime/LiveKitYjsProvider'
+import type { AwarenessState, LiveKitYjsProvider } from '@/lib/livekit-yjs-provider'
 import { useEffect, useState } from 'react'
 
 export type RemoteCursor = AwarenessState & { clientId: number }

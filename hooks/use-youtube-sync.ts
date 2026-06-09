@@ -21,13 +21,7 @@ interface YoutubeMessage {
     currentTime: number
     isPlaying: boolean
     timestamp: number
-  }
-}
-
-declare global {
-  interface Window {
-    YT: typeof YT
-    onYouTubeIframeAPIReady: () => void
+    quality: YT.SuggestedVideoQuality
   }
 }
 
@@ -43,6 +37,7 @@ export function useYoutubeSync(onReady?: () => void) {
   const videoIdRef = useRef(parseYoutubeURL(videoUrl))
   const isPlayerReadyRef = useRef(false)
   const pendingPayloadRef = useRef<YoutubeMessage['payload'] | null>(null)
+  const playbackQualityRef = useRef<YT.SuggestedVideoQuality>('medium')
 
   // Host: broadcast state to all participants via rAF, throttled to every 200ms
   const startBroadcast = useEffectEvent((current: typeof room) => {
@@ -54,6 +49,12 @@ export function useYoutubeSync(onReady?: () => void) {
       // Only broadcast every 200ms — no need to send every frame
       if (now - lastTime > 200) {
         if (playerRef.current) {
+          const quality = playerRef.current?.getPlaybackQuality()
+
+          if (quality && quality !== playbackQualityRef.current) {
+            playbackQualityRef.current = quality
+          }
+
           const message: YoutubeMessage = {
             action: LiveKitAction.YoutubeUpdate,
             payload: {
@@ -61,6 +62,7 @@ export function useYoutubeSync(onReady?: () => void) {
               currentTime: playerRef.current.getCurrentTime(),
               isPlaying: playerRef.current.getPlayerState() === window.YT.PlayerState.PLAYING,
               timestamp: Date.now(), // Wall clock at time of broadcast
+              quality: playerRef.current.getPlaybackQuality(),
             },
           }
           current.localParticipant.publishData(encoder.encode(JSON.stringify(message)), {
@@ -75,10 +77,10 @@ export function useYoutubeSync(onReady?: () => void) {
     syncIntervalRef.current = requestAnimationFrame(loop)
   })
 
+  // Fix 1: was clearInterval — must use cancelAnimationFrame since syncIntervalRef holds a rAF ID
   const stopBroadcast = () => {
     if (!syncIntervalRef.current) return
-
-    clearInterval(syncIntervalRef.current)
+    cancelAnimationFrame(syncIntervalRef.current)
     syncIntervalRef.current = null
   }
 
@@ -95,7 +97,7 @@ export function useYoutubeSync(onReady?: () => void) {
       }
 
       const player = playerRef.current
-      const { videoId, currentTime, isPlaying, timestamp } = message.payload
+      const { videoId, currentTime, isPlaying, timestamp, quality } = message.payload
 
       // --- LATENCY COMPENSATION ---
       // Estimate how long the data was in transit
@@ -105,20 +107,39 @@ export function useYoutubeSync(onReady?: () => void) {
       // Switch video if ID changed
       if (videoId !== videoIdRef.current) {
         videoIdRef.current = videoId
-        player.loadVideoById({ videoId, startSeconds: adjustedTime })
+        player.loadVideoById({ videoId, startSeconds: adjustedTime, suggestedQuality: quality })
         return
       }
 
-      // Resync if drift exceeds 300ms tolerance
+      const playerState = player.getPlayerState()
+
+      // Fix 2: Don't seek while buffering — calling seekTo during BUFFERING restarts
+      // the buffer, causing an infinite loading loop on the participant side
+      const isBuffering = playerState === window.YT.PlayerState.BUFFERING
+
+      // Force quality during active playback by seeking to current position
+      const currentQuality = player.getPlaybackQuality()
+      if (quality && quality !== currentQuality) {
+        player.setPlaybackQuality(quality)
+        // seekTo forces YouTube to re-buffer at the new quality level
+        if (!isBuffering) {
+          player.seekTo(player.getCurrentTime(), true)
+        }
+      }
+
+      // Resync if drift exceeds 300ms tolerance and player isn't mid-buffer
       const drift = Math.abs(player.getCurrentTime() - adjustedTime)
-      if (drift > 0.3) {
+      if (drift > 0.3 && !isBuffering) {
         player.seekTo(adjustedTime, true)
       }
 
-      // Handle play/pause state
-      if (isPlaying) {
+      // Fix 3: Only call playVideo/pauseVideo when state actually needs to change.
+      // Calling playVideo() every 200ms while buffering was hammering the player
+      // and restarting the buffer on every packet — the main cause of stuttering.
+      const currentlyPlaying = playerState === window.YT.PlayerState.PLAYING
+      if (isPlaying && !currentlyPlaying && !isBuffering) {
         player.playVideo()
-      } else if (!isPlaying) {
+      } else if (!isPlaying && currentlyPlaying) {
         player.pauseVideo()
       }
     } catch (err) {
@@ -144,6 +165,8 @@ export function useYoutubeSync(onReady?: () => void) {
       events: {
         onReady: () => {
           isPlayerReadyRef.current = true
+          playerRef.current?.setPlaybackQuality('medium')
+
           onReady?.()
 
           const pending = pendingPayloadRef.current
@@ -151,7 +174,7 @@ export function useYoutubeSync(onReady?: () => void) {
           // Apply buffered payload if it arrived before the player was ready
           if (pending) {
             pendingPayloadRef.current = null
-            const { videoId, currentTime, isPlaying, timestamp } = pending
+            const { videoId, currentTime, isPlaying, timestamp, quality } = pending
 
             // Apply the same latency compensation as the live handler
             const networkLatency = (Date.now() - timestamp) / 1000
@@ -168,7 +191,11 @@ export function useYoutubeSync(onReady?: () => void) {
             }
 
             playerRef.current?.addEventListener('onStateChange', handlePendingState)
-            playerRef.current?.loadVideoById({ videoId, startSeconds: seekTime })
+            playerRef.current?.loadVideoById({
+              videoId,
+              startSeconds: seekTime,
+              suggestedQuality: quality,
+            })
           }
         },
         onStateChange: (event) => {
@@ -185,6 +212,7 @@ export function useYoutubeSync(onReady?: () => void) {
               currentTime: playerRef.current?.getCurrentTime() ?? 0,
               isPlaying: event.data === window.YT.PlayerState.PLAYING,
               timestamp: now,
+              quality: playerRef.current?.getPlaybackQuality() ?? playbackQualityRef.current, // Fresh value,
             },
           }
 

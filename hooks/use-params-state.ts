@@ -27,7 +27,7 @@ export function useParamsState<P extends Params = Params>() {
 
   // ─── TabsCode ─────────────────────────────────────────────────
   const isTabsMeeting = tabsCode === TabsCode.TabsMeeting
-  const isTabsMeetingSharedNotes = tabsCode === TabsCode.TabsMeetingSharedNotes
+  const isTabsMeetingNotes = tabsCode === TabsCode.TabsMeetingNotes
   const isTabsMeetingPolling = tabsCode === TabsCode.TabsMeetingPolling
   const isTabsMeetingWatchYoutube = tabsCode === TabsCode.TabsMeetingWatchYoutube
   const isTabsParticipant = tabsCode === TabsCode.TabsParticipant
@@ -40,7 +40,7 @@ export function useParamsState<P extends Params = Params>() {
   const closeTab = () => router.replace(qstring(pathname, omit({ ...currentParams }, [SearchParamsKey.TabsCode]))) // prettier-ignore
   const toggleTab = (target: TabsCode) => (isTabsActive ? closeTab() : openTab(target))
   const openTabsMeeting = () => openTab(TabsCode.TabsMeeting)
-  const openTabsSharedNotes = () => openTab(TabsCode.TabsMeetingSharedNotes)
+  const openTabsNotes = () => openTab(TabsCode.TabsMeetingNotes)
   const openTabsPolling = () => openTab(TabsCode.TabsMeetingPolling)
   const openTabsWatchYoutube = () => openTab(TabsCode.TabsMeetingWatchYoutube)
   const openTabsParticipant = () => openTab(TabsCode.TabsParticipant)
@@ -74,7 +74,7 @@ export function useParamsState<P extends Params = Params>() {
 
     // TabsCode checks
     isTabsMeeting,
-    isTabsMeetingSharedNotes,
+    isTabsMeetingNotes,
     isTabsMeetingPolling,
     isTabsMeetingWatchYoutube,
     isTabsParticipant,
@@ -88,7 +88,7 @@ export function useParamsState<P extends Params = Params>() {
     closeTab,
     openTab,
     openTabsMeeting,
-    openTabsSharedNotes,
+    openTabsNotes,
     openTabsPolling,
     openTabsWatchYoutube,
     openTabsParticipant,

@@ -1,6 +1,9 @@
+import type { ReactNode } from 'react'
 import type { LocalParticipant, VideoCodec } from 'livekit-client'
 import type { MessageType } from '@/feat/enum'
+import { isValidElement, Children, cloneElement } from 'react'
 import { videoCodecs } from 'livekit-client'
+import { cn } from '@/lib/utils'
 import { ChunkSize, ColorPalette } from '@/feat/const'
 
 export function roomOptionsStringifyReplacer(key: string, val: unknown) {
@@ -140,3 +143,27 @@ export function generateColor(identity: string): { hex: string; tldraw: string }
   }
   return ColorPalette[Math.abs(hash) % ColorPalette.length]
 }
+
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access */
+export function cloneSingleChild(
+  children: ReactNode | ReactNode[],
+  props?: Record<string, any>,
+  key?: any
+) {
+  return Children.map(children, (child) => {
+    // Checking isValidElement is the safe way and avoids a typescript
+    // error too.
+    if (isValidElement(child) && Children.only(children)) {
+      const _props = child.props as any
+      if (_props.className) {
+        // make sure we retain classnames of both passed props and child
+        props ??= {}
+        props.className = cn(_props.className, props.className)
+        props.style = { ..._props.style, ...props.style }
+      }
+      return cloneElement(child, { ...props, key })
+    }
+    return child
+  })
+}
+/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access */

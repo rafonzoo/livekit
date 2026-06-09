@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import type { LocalUserChoicesPassword, PreJoinProps } from '@/feat/PreJoin'
+import type { LocalUserChoicesPassword, PreJoinProps } from '@/feat/Room/Prejoin'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useMaybeRoomContext } from '@livekit/components-react'
 import { log } from '@livekit/components-core'
