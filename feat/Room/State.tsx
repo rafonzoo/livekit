@@ -2,7 +2,6 @@
 
 import type { FC, ReactNode } from 'react'
 import type { RemoteParticipant } from 'livekit-client'
-import type { PollingMessage } from '@/feat/Tabs'
 import type { ScreenCode } from '@/feat/enum'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { RoomEvent } from 'livekit-client'
@@ -30,9 +29,8 @@ export interface StateContextProps {
   screen: ScreenMessage | null
   record: string | null
   isHost: boolean
-  pollings: PollingMessage[]
   startActiveScreen: (code: ScreenID, payload?: ScreenPayload) => Promise<void>
-  stopActiveScreen: () => Promise<void>
+  stopActiveScreen: (payload?: { polling: string }) => Promise<void>
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
 }
@@ -44,7 +42,6 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
   const room = useMaybeRoomContext()
   const [screen, setScreen] = useState<StateContextProps['screen'] | null>(null)
   const [record, setRecord] = useState<StateContextProps['record'] | null>(null)
-  const [pollings, setPollings] = useState([])
   const isHost = room?.localParticipant.identity === screen?.host
 
   const startRecording = async () => {
@@ -76,13 +73,14 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
     })
   }
 
-  const stopActiveScreen = async () => {
+  const stopActiveScreen = async (payload?: { polling: string }) => {
     if (!room?.localParticipant) return
     await room.localParticipant.setAttributes({
       [ParticipantAttribute.ScreenActive]: '',
       [ParticipantAttribute.ScreenActiveHost]: '',
       [ParticipantAttribute.ScreenActiveUrl]: '',
-      [ParticipantAttribute.ScreenActivePolling]: '',
+      // No need to remove polling for polling history but is SHOULD update `closedAt` to filter new polling session
+      ...(payload?.polling ? { [ParticipantAttribute.ScreenActivePolling]: payload.polling } : {}),
     })
   }
 
@@ -107,7 +105,7 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
         if (currentScreen) {
           const payload = { id: currentScreen, host: participant.identity }
           newScreen = url ? { ...payload, url } : payload
-          newScreen = polling ? { ...payload, polling } : payload
+          newScreen = polling ? { ...newScreen, polling } : newScreen
         }
 
         const hostId = participant.attributes?.[ParticipantAttribute.ScreenRecord]

@@ -17,7 +17,7 @@ export enum LiveKitAction {
   HandRaisedUpper = 'HANDRAISED_UPPER',
   HandRaisedLower = 'HANDRAISED_LOWER',
   MicrophoneUpdate = 'MICROPHONE_UPDATE',
-  PollingStart = 'POLLING_START',
+  PollingVoteNow = 'POLLING_VOTE_NOW',
 }
 
 export enum ParticipantAttribute {
