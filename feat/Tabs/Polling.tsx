@@ -2,14 +2,17 @@
 
 import type { FC } from 'react'
 import { useState } from 'react'
-import { Chevron } from '@livekit/components-react'
+import { Chevron, useRoomContext } from '@livekit/components-react'
 import { cn, djs } from '@/lib/utils'
+import { useRoomState } from '@/feat/Room'
+import { ParticipantAttribute, ScreenCode } from '@/feat/enum'
 import { ButtonTab } from '@/components/Button'
 
 export interface PollingSession {
   question: string
   options: PollingOption[]
   isResult?: boolean
+  onCheckedChange?: (id: number) => void
 }
 
 export interface PollingOption {
@@ -18,16 +21,30 @@ export interface PollingOption {
   votes: { identity: string; name: string }[]
 }
 
+export interface PollingMessage {
+  id: number
+  identity: string
+  question: string
+  options: PollingOption[]
+  active: boolean
+}
+
 const POLLING_OPTION_LENGTH = 5
 const INPUT_CLASSES = cn(
   'h-9 inline-flex w-full text-sm items-center px-3 rounded-md border border-muted-foreground/40 shadow'
 )
 
-export const PollingResult: FC<PollingSession> = ({ question, options, isResult = false }) => {
+export const PollingCard: FC<PollingSession> = ({
+  question,
+  options,
+  isResult = false,
+  onCheckedChange,
+}) => {
   const [checkedId, setCheckedId] = useState(0)
+  const { isHost, stopActiveScreen } = useRoomState()
   const Label = isResult ? 'p' : 'label'
   const answers = !isResult
-    ? options.filter((option) => !!option.value)
+    ? options
     : [
         ...options,
         { id: -1, value: 'Tidak menjawab', votes: [] },
@@ -35,11 +52,8 @@ export const PollingResult: FC<PollingSession> = ({ question, options, isResult 
       ]
 
   return (
-    <div className='mt-4 flex flex-col gap-4 rounded-md border p-5 shadow'>
-      <h3 className='text-primary font-semibold'>
-        {/* Apakah Bapak/Ibu menyetujui ketentuan rapat ini? */}
-        {question}
-      </h3>
+    <div className='text-foreground bg-background mt-4 flex w-105 max-w-[87.5%] flex-col gap-4 rounded-md border p-5 shadow'>
+      <h3 className='text-primary font-semibold'>{question}</h3>
       {isResult && (
         <div className='flex w-full flex-wrap items-center gap-2 text-xs leading-4'>
           <svg xmlns='http://www.w3.org/2000/svg' width={16} height={16} fill='none'>
@@ -55,7 +69,7 @@ export const PollingResult: FC<PollingSession> = ({ question, options, isResult 
             />
           </svg>
           <time dateTime={djs().toString()} className='mr-auto translate-y-px'>
-            {djs().format('DD MMMM YYYY, H  H.mm WIB')}
+            {djs().format('DD MMMM YYYY, HH.mm WIB')}
           </time>
           <p className='flex items-center gap-2'>
             <svg xmlns='http://www.w3.org/2000/svg' width={15} height={16} fill='none'>
@@ -78,7 +92,7 @@ export const PollingResult: FC<PollingSession> = ({ question, options, isResult 
             <Label
               htmlFor={isResult ? void 0 : `answer-option-${id}`}
               className={cn(
-                'flex',
+                'flex items-center',
                 !isResult &&
                   (checkedId === id
                     ? 'bg-primary text-primary-foreground'
@@ -92,7 +106,10 @@ export const PollingResult: FC<PollingSession> = ({ question, options, isResult 
                   id={`answer-option-${id}`}
                   name={`answer-option-${id}`}
                   checked={checkedId === id}
-                  onChange={() => setCheckedId(id)}
+                  onChange={async () => {
+                    onCheckedChange?.(id)
+                    setCheckedId(id)
+                  }}
                 />
               )}
               <span className={cn('text-sm', !isResult && 'font-semibold')}>{value}</span>
@@ -102,7 +119,7 @@ export const PollingResult: FC<PollingSession> = ({ question, options, isResult 
                 <div className='relative h-2 grow'>
                   <span className='bg-foreground/10 absolute inset-0 rounded-full'></span>
                   <span
-                    style={{ width: `${(1 / 5) * 100}%` }}
+                    style={{ width: `${(votes.length / 20) * 100}%` }}
                     className={cn(
                       'absolute top-0 bottom-0 left-0 rounded-full',
                       id < 0 ? 'bg-destructive' : 'bg-primary'
@@ -115,11 +132,21 @@ export const PollingResult: FC<PollingSession> = ({ question, options, isResult 
           </li>
         ))}
       </ul>
+      {isResult && isHost && (
+        <button
+          onClick={() => stopActiveScreen()}
+          className='text-destructive inline-flex size-auto h-11 cursor-pointer items-center justify-center rounded-md bg-red-200 text-center font-semibold hover:not-disabled:bg-red-300 disabled:opacity-40'
+        >
+          Tutup polling
+        </button>
+      )}
     </div>
   )
 }
 
 export const TabsPolling: FC = () => {
+  const room = useRoomContext()
+  const { startActiveScreen } = useRoomState()
   const [collapse, setCollapse] = useState(false)
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState<PollingOption[]>(
@@ -155,7 +182,7 @@ export const TabsPolling: FC = () => {
             className={cn(INPUT_CLASSES)}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            onFocus={(e) => e.target.select()}
+            onPointerUp={(e) => e.currentTarget.select()}
             autoComplete='off'
           />
           <ul className='flex flex-col gap-2'>
@@ -168,7 +195,7 @@ export const TabsPolling: FC = () => {
                   placeholder={`Opsi ${index + 1}`}
                   value={value}
                   className={cn(INPUT_CLASSES)}
-                  onFocus={(e) => e.target.select()}
+                  onPointerUp={(e) => e.currentTarget.select()}
                   onChange={(e) => {
                     setOptions((prev) =>
                       prev.map((previous) =>
@@ -184,19 +211,34 @@ export const TabsPolling: FC = () => {
             isActive
             disabled={!question || options.filter((option) => !!option.value).length < 2}
             className='size-auto h-11 font-semibold'
-            onClick={() =>
-              console.log(
-                question,
-                options.filter((option) => !!option.value)
-              )
-            }
+            onClick={() => {
+              const participant = room.localParticipant
+              const prev = participant.attributes[ParticipantAttribute.ScreenActivePolling] || '[]'
+              try {
+                const prevMessage = JSON.parse(prev) as PollingMessage[]
+                startActiveScreen(ScreenCode.Polling, {
+                  polling: JSON.stringify([
+                    ...prevMessage,
+                    {
+                      id: Date.now(),
+                      identity: room.localParticipant.identity,
+                      question,
+                      options: options.filter((option) => !!option.value),
+                      active: true,
+                    },
+                  ]),
+                })
+              } catch (e) {
+                console.log(e)
+              }
+            }}
           >
             Buat Pendapat
           </ButtonTab>
         </div>
       </div>
 
-      <PollingResult question={question} options={options} />
+      {/* <PollingCard question={question} options={options} isResult /> */}
     </div>
   )
 }

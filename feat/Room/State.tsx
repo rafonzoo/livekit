@@ -2,6 +2,7 @@
 
 import type { FC, ReactNode } from 'react'
 import type { RemoteParticipant } from 'livekit-client'
+import type { PollingMessage } from '@/feat/Tabs'
 import type { ScreenCode } from '@/feat/enum'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { RoomEvent } from 'livekit-client'
@@ -20,13 +21,17 @@ export interface ScreenMessage {
   id: ScreenID
   host: string
   url?: string
+  polling?: string
 }
+
+export type ScreenPayload = Partial<Record<'url' | 'polling', string>>
 
 export interface StateContextProps {
   screen: ScreenMessage | null
   record: string | null
   isHost: boolean
-  startActiveScreen: (code: ScreenID, url?: string) => Promise<void>
+  pollings: PollingMessage[]
+  startActiveScreen: (code: ScreenID, payload?: ScreenPayload) => Promise<void>
   stopActiveScreen: () => Promise<void>
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
@@ -39,6 +44,7 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
   const room = useMaybeRoomContext()
   const [screen, setScreen] = useState<StateContextProps['screen'] | null>(null)
   const [record, setRecord] = useState<StateContextProps['record'] | null>(null)
+  const [pollings, setPollings] = useState([])
   const isHost = room?.localParticipant.identity === screen?.host
 
   const startRecording = async () => {
@@ -55,12 +61,18 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
     })
   }
 
-  const startActiveScreen = async (code: ScreenID, url?: string) => {
+  const startActiveScreen = async (
+    code: ScreenID,
+    payload?: Partial<Record<'url' | 'polling', string>>
+  ) => {
     if (!room?.localParticipant) return
+    const url = payload?.url
+    const polling = payload?.polling
     await room.localParticipant.setAttributes({
       [ParticipantAttribute.ScreenActive]: String(code),
       [ParticipantAttribute.ScreenActiveHost]: room.localParticipant.identity,
       ...(url ? { [ParticipantAttribute.ScreenActiveUrl]: url } : {}),
+      ...(polling ? { [ParticipantAttribute.ScreenActivePolling]: polling } : {}),
     })
   }
 
@@ -70,6 +82,7 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
       [ParticipantAttribute.ScreenActive]: '',
       [ParticipantAttribute.ScreenActiveHost]: '',
       [ParticipantAttribute.ScreenActiveUrl]: '',
+      [ParticipantAttribute.ScreenActivePolling]: '',
     })
   }
 
@@ -89,10 +102,12 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
       allParticipants.forEach((participant) => {
         const currentScreen = num(participant.attributes?.[ParticipantAttribute.ScreenActive])
         const url = participant.attributes?.[ParticipantAttribute.ScreenActiveUrl]
+        const polling = participant.attributes?.[ParticipantAttribute.ScreenActivePolling]
 
         if (currentScreen) {
           const payload = { id: currentScreen, host: participant.identity }
           newScreen = url ? { ...payload, url } : payload
+          newScreen = polling ? { ...payload, polling } : payload
         }
 
         const hostId = participant.attributes?.[ParticipantAttribute.ScreenRecord]

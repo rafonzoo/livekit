@@ -40,7 +40,7 @@ export function useTabsMeeting() {
         const { data } = await getRemoteUrl(id)
 
         if (data?.url) {
-          startActiveScreen(id, data.url)
+          startActiveScreen(id, { url: data.url })
         } else {
           // May add toast error here
         }
