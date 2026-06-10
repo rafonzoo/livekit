@@ -57,8 +57,8 @@ export async function unsecuredCopyToClipboard(text: string) {
 
   try {
     document.execCommand('copy')
-  } catch (err) {
-    console.error('Unable to copy to clipboard', err)
+  } catch (e) {
+    console.log('Failed to copy to clipboard using copy command:', e)
   }
 
   document.body.removeChild(textArea)
@@ -67,10 +67,17 @@ export async function unsecuredCopyToClipboard(text: string) {
 export async function copyHandler(text = '') {
   try {
     await navigator.clipboard.writeText(text)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
+  } catch (e) {
     await unsecuredCopyToClipboard(text)
+    console.log('Failed to copy to clipboard with secure https:', e)
   }
+}
+
+export function formatCountdown(counter: number) {
+  const minutes = Math.floor(counter / 60)
+  const seconds = counter % 60
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 // ── Chunking ──────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import type { PollingMessage, PollingOption } from '@/feat/Tabs'
+import type { PollingMessage, PollingOption } from '@/components/PollingCard'
 import { useEffect, useState, useEffectEvent } from 'react'
 import { RoomEvent } from 'livekit-client'
 import { useRoomContext } from '@livekit/components-react'
@@ -19,7 +19,7 @@ export function usePollingSession(onReady?: () => void) {
   const { openPanelOpen, closePanel } = useParamsState()
   const parsed = JSON.parse(screen?.polling ?? '') as PollingMessage[]
   const pollings = { ...parsed.find((polling) => !polling.closedAt) }
-  const { id, totalParticipant = 100, question = '', options = [] } = pollings
+  const { id, openedAt = -1, totalParticipant = 100, question = '', options = [] } = pollings
   const room = useRoomContext()
 
   const { send: updateVote } = useDataChannel<VoteMessage>(
@@ -94,13 +94,12 @@ export function usePollingSession(onReady?: () => void) {
         : message
     )
 
-    stopActiveScreen({ polling: JSON.stringify(closePolling) })
     openPanelOpen()
+    stopActiveScreen({ polling: JSON.stringify(closePolling) })
   }
 
   useEffect(() => prepareToAnswer(), [])
-
-  return { totalParticipant, question, options, isHost, selectVote, endPolling }
+  return { totalParticipant, openedAt, question, options, isHost, selectVote, endPolling }
 }
 
 export function usePollingQuestion(config?: { optionLength?: number }) {
@@ -166,7 +165,7 @@ export function usePollingQuestion(config?: { optionLength?: number }) {
         setCollapse(history.length > 0)
       })
     } catch (e) {
-      console.log(e)
+      console.log('Failed to start polling:', e)
     }
   }
 

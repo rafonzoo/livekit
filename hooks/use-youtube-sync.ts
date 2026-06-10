@@ -86,6 +86,13 @@ export function useYoutubeSync(onReady?: () => void) {
 
   // Participant: receive and apply sync from host
   const handleDataReceived = useEffectEvent((payload: Uint8Array) => {
+    const rawString = decoder.decode(payload)
+
+    // Invalid json parse
+    if (!rawString.trim().startsWith('{')) {
+      return
+    }
+
     try {
       const message = JSON.parse(decoder.decode(payload)) as YoutubeMessage
       if (message.action !== LiveKitAction.YoutubeUpdate || hasControl) return
@@ -142,8 +149,8 @@ export function useYoutubeSync(onReady?: () => void) {
       } else if (!isPlaying && currentlyPlaying) {
         player.pauseVideo()
       }
-    } catch (err) {
-      console.error(err)
+    } catch (e) {
+      console.log('Failed to sync from the host:', e)
     }
   })
 

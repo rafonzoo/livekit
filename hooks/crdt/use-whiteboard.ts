@@ -1,48 +1,43 @@
+import type * as Y from 'yjs'
 import type { ExcalidrawImperativeAPI, ExcalidrawProps } from '@excalidraw/excalidraw/types'
 import type { AwarenessState } from '@/lib/livekit-yjs-provider'
-import { useRef, useEffect, useState } from 'react'
-import * as Y from 'yjs'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { ExcalidrawBinding, yjsToExcalidraw } from '@mizuka-wu/y-excalidraw'
 import { useRoomContext } from '@livekit/components-react'
-import { useRoomState } from '@/feat/Room'
 import { LiveKitYjsProvider } from '@/lib/livekit-yjs-provider'
+import { useRoomState } from '@/feat/Room'
 
 export function useWhiteboard(onReady?: () => void) {
-  const { screen } = useRoomState()
+  const { ydoc } = useRoomState()
   const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null)
   const excalidrawRef = useRef<HTMLDivElement | null>(null)
   const room = useRoomContext()
   const onReadyRef = useRef(onReady)
-  const yElementsRef = useRef<Y.Array<Y.Map<unknown>>>(null)
-  const providerRef = useRef<LiveKitYjsProvider | null>(null)
+  const yElements = ydoc?.getArray<Y.Map<unknown>>('elements')
   const bindingRef = useRef<ExcalidrawBinding | null>(null)
 
-  useEffect(() => {
-    if (!api) return
+  // Memo required due to module ydoc is deferred.
+  const provider = useMemo(
+    () => (!ydoc || !room ? null : new LiveKitYjsProvider(ydoc, room)),
+    [room, ydoc]
+  )
 
-    const ydoc = new Y.Doc()
-    const yElements = ydoc.getArray<Y.Map<unknown>>('elements')
-    const provider = new LiveKitYjsProvider(ydoc, room)
+  useEffect(() => {
+    if (!api || !provider || !yElements) return
+
     const { name } = provider.awareness.getLocalState() as AwarenessState
 
     provider.awareness.setLocalStateField('user', { name })
     const excalidrawApi = new ExcalidrawBinding(yElements, null, api, provider.awareness)
 
-    yElementsRef.current = yElements
-    providerRef.current = provider
     bindingRef.current = excalidrawApi
     onReadyRef.current?.()
 
     return () => {
-      // `isHost` cannot be use here since the `screen` it self updated
-      if (room.localParticipant.identity === screen?.host) {
-        yElements.delete(0, yElements.length)
-      }
       excalidrawApi.destroy()
       provider.destroy()
-      ydoc.destroy()
     }
-  }, [api, room, screen?.host])
+  }, [api, provider, yElements])
 
   return {
     binding: bindingRef.current,
@@ -60,7 +55,7 @@ export function useWhiteboard(onReady?: () => void) {
           },
         },
       },
-      elements: yElementsRef.current ? yjsToExcalidraw(yElementsRef.current) : null,
+      elements: yElements ? yjsToExcalidraw(yElements) : null,
     } satisfies ExcalidrawProps['initialData'],
   }
 }

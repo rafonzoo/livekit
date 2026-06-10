@@ -45,7 +45,7 @@ export function useDataChannel<P>(
           onMessage({ payload, participant })
         }
       } catch (e) {
-        console.log(e)
+        console.log('Failed to receive the message:', e)
       }
     }
   )
