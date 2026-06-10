@@ -102,9 +102,10 @@ export class LiveKitYjsProvider<T extends object = TLDrawCursor> {
               }).catch(console.error)
             }
           }
-        } catch (err) {
-          console.error('RTCHandler: doc sync error', err)
+        } catch (e) {
+          console.log('Failed to apply ydoc update:', e)
         }
+
         return
       }
 
@@ -116,9 +117,10 @@ export class LiveKitYjsProvider<T extends object = TLDrawCursor> {
           }
           this.awareness.getStates().set(clientId, state)
           this.awareness.emit('change', [{ added: [], updated: [clientId], removed: [] }, 'remote'])
-        } catch (err) {
-          console.error('RTCHandler: awareness error', err)
+        } catch (e) {
+          console.log('Failed to emit awareness:', e)
         }
+
         return
       }
     }

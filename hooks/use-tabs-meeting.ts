@@ -18,10 +18,12 @@ export function useTabsMeeting() {
   const room = useRoomContext()
   const { screen, record, startRecording, stopRecording, startActiveScreen, stopActiveScreen } =
     useRoomState()
-  const { openTabsPolling, openTabsNotes } = useParamsState()
+  const { closePanel, openTabsPolling, openTabsNotes } = useParamsState()
 
   function handleToggleActiveScreen(id: ScreenID) {
     return async (e: MouseEvent<HTMLButtonElement>) => {
+      let success = true
+
       if (screen?.id === id) {
         if (!confirm('Apakah anda yakin ingin mengakhiri sesi ini?')) {
           return e.preventDefault()
@@ -40,15 +42,20 @@ export function useTabsMeeting() {
         const { data } = await getRemoteUrl(id)
 
         if (data?.url) {
-          startActiveScreen(id, { url: data.url })
+          await startActiveScreen(id, { url: data.url })
         } else {
           // May add toast error here
+          success = false
         }
 
         target.disabled = false
         target.textContent = prevtext
       } else {
-        return startActiveScreen(id)
+        await startActiveScreen(id)
+      }
+
+      if (success) {
+        closePanel()
       }
     }
   }

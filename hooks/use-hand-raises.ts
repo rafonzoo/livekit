@@ -18,8 +18,8 @@ export function useHandRaises() {
       await localParticipant.setAttributes({
         [ParticipantAttribute.HandRaised]: String(shouldRaise),
       })
-    } catch (error) {
-      console.error('Failed to update hand raise attribute:', error)
+    } catch (e) {
+      console.log('Failed to update hand raise attribute:', e)
     }
   }
 

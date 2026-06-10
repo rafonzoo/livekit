@@ -1,5 +1,6 @@
 'use client'
 
+import type { Doc } from 'yjs'
 import type { FC, ReactNode } from 'react'
 import type { RemoteParticipant } from 'livekit-client'
 import type { ScreenCode } from '@/feat/enum'
@@ -29,6 +30,7 @@ export interface StateContextProps {
   screen: ScreenMessage | null
   record: string | null
   isHost: boolean
+  ydoc: Doc | null
   startActiveScreen: (code: ScreenID, payload?: ScreenPayload) => Promise<void>
   stopActiveScreen: (payload?: { polling: string }) => Promise<void>
   startRecording: () => Promise<void>
@@ -40,22 +42,31 @@ export const useRoomState = () => useContext(StateContext)
 
 export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
   const room = useMaybeRoomContext()
+  const [ydoc, setYdoc] = useState<Doc | null>(null)
   const [screen, setScreen] = useState<StateContextProps['screen'] | null>(null)
   const [record, setRecord] = useState<StateContextProps['record'] | null>(null)
   const isHost = room?.localParticipant.identity === screen?.host
 
   const startRecording = async () => {
     if (!room?.localParticipant) return
-    await room.localParticipant.setAttributes({
-      [ParticipantAttribute.ScreenRecord]: room.localParticipant.identity,
-    })
+    try {
+      await room.localParticipant.setAttributes({
+        [ParticipantAttribute.ScreenRecord]: room.localParticipant.identity,
+      })
+    } catch (e) {
+      console.log('Failed to start recording:', e)
+    }
   }
 
   const stopRecording = async () => {
     if (!room?.localParticipant) return
-    await room.localParticipant.setAttributes({
-      [ParticipantAttribute.ScreenRecord]: '',
-    })
+    try {
+      await room.localParticipant.setAttributes({
+        [ParticipantAttribute.ScreenRecord]: '',
+      })
+    } catch (e) {
+      console.log('Failed to stop recording:', e)
+    }
   }
 
   const startActiveScreen = async (
@@ -63,25 +74,36 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
     payload?: Partial<Record<'url' | 'polling', string>>
   ) => {
     if (!room?.localParticipant) return
-    const url = payload?.url
-    const polling = payload?.polling
-    await room.localParticipant.setAttributes({
-      [ParticipantAttribute.ScreenActive]: String(code),
-      [ParticipantAttribute.ScreenActiveHost]: room.localParticipant.identity,
-      ...(url ? { [ParticipantAttribute.ScreenActiveUrl]: url } : {}),
-      ...(polling ? { [ParticipantAttribute.ScreenActivePolling]: polling } : {}),
-    })
+    try {
+      const url = payload?.url
+      const polling = payload?.polling
+
+      await room.localParticipant.setAttributes({
+        [ParticipantAttribute.ScreenActive]: String(code),
+        [ParticipantAttribute.ScreenActiveHost]: room.localParticipant.identity,
+        ...(url ? { [ParticipantAttribute.ScreenActiveUrl]: url } : {}),
+        ...(polling ? { [ParticipantAttribute.ScreenActivePolling]: polling } : {}),
+      })
+    } catch (e) {
+      console.log('Failed to start active screen:', e)
+    }
   }
 
   const stopActiveScreen = async (payload?: { polling: string }) => {
     if (!room?.localParticipant) return
-    await room.localParticipant.setAttributes({
-      [ParticipantAttribute.ScreenActive]: '',
-      [ParticipantAttribute.ScreenActiveHost]: '',
-      [ParticipantAttribute.ScreenActiveUrl]: '',
-      // No need to remove polling for polling history but is SHOULD update `closedAt` to filter new polling session
-      ...(payload?.polling ? { [ParticipantAttribute.ScreenActivePolling]: payload.polling } : {}),
-    })
+    try {
+      await room.localParticipant.setAttributes({
+        [ParticipantAttribute.ScreenActive]: '',
+        [ParticipantAttribute.ScreenActiveHost]: '',
+        [ParticipantAttribute.ScreenActiveUrl]: '',
+        // No need to remove polling for polling history but is SHOULD update `closedAt` to filter new polling session
+        ...(payload?.polling
+          ? { [ParticipantAttribute.ScreenActivePolling]: payload.polling }
+          : {}),
+      })
+    } catch (e) {
+      console.log('Failed to stop active screen:', e)
+    }
   }
 
   useEffect(() => {
@@ -147,18 +169,31 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
       }
     }
 
+    const loadYdoc = async () => {
+      if (ydoc) return
+
+      try {
+        const { Doc } = await import('yjs')
+        setYdoc(new Doc())
+      } catch (e) {
+        console.log('Failed to load yDoc:', e)
+      }
+    }
+
+    loadYdoc()
     room.on(RoomEvent.Connected, syncRoomState)
     room.on(RoomEvent.LocalTrackPublished, syncRoomState)
     room.on(RoomEvent.ParticipantAttributesChanged, syncRoomState)
     room.on(RoomEvent.ParticipantDisconnected, handleLeavingHost)
 
     return () => {
+      ydoc?.destroy()
       room.off(RoomEvent.Connected, syncRoomState)
       room.off(RoomEvent.LocalTrackPublished, syncRoomState)
       room.off(RoomEvent.ParticipantAttributesChanged, syncRoomState)
       room.off(RoomEvent.ParticipantDisconnected, handleLeavingHost)
     }
-  }, [room])
+  }, [room, ydoc])
 
   return (
     <StateContext.Provider
@@ -166,6 +201,7 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
         screen,
         record,
         isHost,
+        ydoc,
         startRecording,
         stopRecording,
         startActiveScreen,

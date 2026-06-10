@@ -193,9 +193,9 @@ export const useNotesToolbar = (getView: () => EditorView | null, editorEl: HTML
         margin: [20, 20, 20, 20],
         autoPaging: 'text', // Ini kunci agar teks tidak terpotong di tengah
       })
-    } catch (error) {
+    } catch (e) {
       alert('Gagal mengunduh dokumen')
-      console.log('Failure to download document:', error)
+      console.log('Failed to download document:', e)
     } finally {
       document.head.removeChild(style)
     }

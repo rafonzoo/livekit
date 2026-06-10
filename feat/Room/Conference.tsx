@@ -60,11 +60,11 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
   const room = useMemo(() => new Room(roomOptions.current()), []) // Maybe changed
   const roomEvent = useRef({
     leave: () => router.replace('/'),
-    error: (err: unknown) => {
-      console.error(err)
+    error: (e: unknown) => {
+      console.log('Failed to get active media devices:', e)
 
       alert(
-        `Encountered an unexpected error, check the console logs for details: ${(err as Error).message}`
+        `Encountered an unexpected error, check the console logs for details: ${(e as Error).message}`
       )
     },
   })
@@ -103,7 +103,7 @@ export const RoomConference: FC<RoomConferenceProps> = ({ children, ...props }) 
           await room.localParticipant.setMicrophoneEnabled(true)
         }
       } catch (e) {
-        console.warn(e)
+        console.log('Failed to connect to the room:', e)
       }
     }
 

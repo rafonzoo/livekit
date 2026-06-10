@@ -35,7 +35,7 @@ export const RoomDetail: FC<RoomDetailProps> = (props) => {
   const preJoinDefaults = useRef({ username: '', audioEnabled: false, videoEnabled: false })
   const connectionDetailsRef = useRef<ConnectionDetails | undefined>(undefined)
   const isReady = !!connectionDetails && !!preJoinChoices
-  const handlePreJoinError = useRef((e: unknown) => console.error(e))
+  const handlePreJoinError = useRef((e: unknown) => console.log('Failed to handle prejoin:', e))
   const handlePreJoinSubmit = useRef(async ({ password, ...values }: LocalUserChoicesPassword) => {
     const url = new URL('/api/connection-details', window.location.origin)
 
@@ -61,9 +61,9 @@ export const RoomDetail: FC<RoomDetailProps> = (props) => {
       } else {
         setConnectionDetails(connectionDetailsData)
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch (e) {
       setInterceptor(ConnectionInterceptor.Unknown)
+      console.log('Failed to join the room:', e)
     } finally {
       setLoading(false)
     }

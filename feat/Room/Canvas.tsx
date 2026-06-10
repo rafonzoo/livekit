@@ -87,8 +87,10 @@ export const RoomCanvas: FC<ComponentProps<'div'>> = ({ className, ...props }) =
 
   // Reset
   useEffect(() => {
-    setIsReady(false)
-    setIsOpen(!!screen?.id)
+    if (!screen?.id) {
+      setIsReady(false)
+      setIsOpen(false)
+    }
   }, [screen?.id])
 
   return (
