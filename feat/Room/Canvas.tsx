@@ -37,6 +37,11 @@ const Notes = dynamic(async () => (await import('@/feat/Activity/Notes')).Notes,
   loading: () => <Loading />,
 })
 
+const Polling = dynamic(async () => (await import('@/feat/Activity/Polling')).Polling, {
+  ssr: false,
+  loading: () => <Loading />,
+})
+
 export interface RoomCanvasProps extends ComponentProps<'div'> {
   screenId: ScreenID
 }
@@ -61,6 +66,11 @@ const config = {
     border: cn('border-yellow-400'),
     background: cn('bg-yellow-400'),
     comp: Notes,
+  },
+  [ScreenCode.Polling]: {
+    border: cn('border-teal-500'),
+    background: cn('bg-teal-500'),
+    comp: Polling,
   },
 }
 

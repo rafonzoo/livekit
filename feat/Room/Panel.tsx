@@ -15,7 +15,6 @@ const RoomPanelComponent: FC<{ children?: ReactNode }> = ({ children }) => {
   const { tabsCode } = useParamsState()
   const room = useRoomContext()
   const state = useConnectionState(room)
-  const hasChild = !!RoomTabs.find(({ id }) => id === tabsCode)?.parentId
   const exludedTabs = [TabsCode.TabsMeetingNotes, TabsCode.TabsChats]
 
   return (
@@ -25,7 +24,7 @@ const RoomPanelComponent: FC<{ children?: ReactNode }> = ({ children }) => {
         TabsCode.TabsChats !== tabsCode && 'overflow-x-hidden overflow-y-auto *:p-5'
       )}
     >
-      {hasChild && <div></div>}
+      {/* {hasChild && <div></div>} */}
       {!exludedTabs.includes(tabsCode) && children}
       {state !== ConnectionState.Connecting && (
         <>

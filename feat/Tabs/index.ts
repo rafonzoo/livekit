@@ -13,4 +13,6 @@ export * from '@/feat/Tabs/Persistance'
 
 export * from '@/feat/Tabs/Personalize'
 
+export * from '@/feat/Tabs/Polling'
+
 export * from '@/feat/Tabs/Settings'

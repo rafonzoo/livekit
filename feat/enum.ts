@@ -17,6 +17,7 @@ export enum LiveKitAction {
   HandRaisedUpper = 'HANDRAISED_UPPER',
   HandRaisedLower = 'HANDRAISED_LOWER',
   MicrophoneUpdate = 'MICROPHONE_UPDATE',
+  PollingVoteNow = 'POLLING_VOTE_NOW',
 }
 
 export enum ParticipantAttribute {
@@ -24,6 +25,7 @@ export enum ParticipantAttribute {
   ScreenActive = 'SCREEN_ACTIVE',
   ScreenActiveHost = 'SCREEN_ACTIVE_HOST',
   ScreenActiveUrl = 'SCREEN_ACTIVE_URL',
+  ScreenActivePolling = 'SCREEN_ACTIVE_POLLING',
   HandRaised = 'HAND_RAISED',
 }
 
@@ -51,6 +53,7 @@ export enum ScreenCode {
   Presentation = 3,
   WatchYoutube = 4,
   Notes = 5,
+  Polling = 6,
 }
 
 export enum TabsCode {

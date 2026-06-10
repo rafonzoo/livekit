@@ -20,14 +20,17 @@ export interface ScreenMessage {
   id: ScreenID
   host: string
   url?: string
+  polling?: string
 }
+
+export type ScreenPayload = Partial<Record<'url' | 'polling', string>>
 
 export interface StateContextProps {
   screen: ScreenMessage | null
   record: string | null
   isHost: boolean
-  startActiveScreen: (code: ScreenID, url?: string) => Promise<void>
-  stopActiveScreen: () => Promise<void>
+  startActiveScreen: (code: ScreenID, payload?: ScreenPayload) => Promise<void>
+  stopActiveScreen: (payload?: { polling: string }) => Promise<void>
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
 }
@@ -55,21 +58,29 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
     })
   }
 
-  const startActiveScreen = async (code: ScreenID, url?: string) => {
+  const startActiveScreen = async (
+    code: ScreenID,
+    payload?: Partial<Record<'url' | 'polling', string>>
+  ) => {
     if (!room?.localParticipant) return
+    const url = payload?.url
+    const polling = payload?.polling
     await room.localParticipant.setAttributes({
       [ParticipantAttribute.ScreenActive]: String(code),
       [ParticipantAttribute.ScreenActiveHost]: room.localParticipant.identity,
       ...(url ? { [ParticipantAttribute.ScreenActiveUrl]: url } : {}),
+      ...(polling ? { [ParticipantAttribute.ScreenActivePolling]: polling } : {}),
     })
   }
 
-  const stopActiveScreen = async () => {
+  const stopActiveScreen = async (payload?: { polling: string }) => {
     if (!room?.localParticipant) return
     await room.localParticipant.setAttributes({
       [ParticipantAttribute.ScreenActive]: '',
       [ParticipantAttribute.ScreenActiveHost]: '',
       [ParticipantAttribute.ScreenActiveUrl]: '',
+      // No need to remove polling for polling history but is SHOULD update `closedAt` to filter new polling session
+      ...(payload?.polling ? { [ParticipantAttribute.ScreenActivePolling]: payload.polling } : {}),
     })
   }
 
@@ -89,10 +100,12 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
       allParticipants.forEach((participant) => {
         const currentScreen = num(participant.attributes?.[ParticipantAttribute.ScreenActive])
         const url = participant.attributes?.[ParticipantAttribute.ScreenActiveUrl]
+        const polling = participant.attributes?.[ParticipantAttribute.ScreenActivePolling]
 
         if (currentScreen) {
           const payload = { id: currentScreen, host: participant.identity }
           newScreen = url ? { ...payload, url } : payload
+          newScreen = polling ? { ...newScreen, polling } : newScreen
         }
 
         const hostId = participant.attributes?.[ParticipantAttribute.ScreenRecord]
