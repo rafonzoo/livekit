@@ -23,10 +23,14 @@ export function useHandRaises() {
     }
   }
 
-  const { send } = useDataChannel<string>(LiveKitAction.HandRaisedLower, () => {
-    // No need received payload, directed by `destinationIdentities`
-    setHandStatus(false)
-  })
+  const { send: sendLowerHand } = useDataChannel<{ identity: string }>(
+    LiveKitAction.HandRaisedLower,
+    ({ payload }) => {
+      if (payload?.identity) {
+        setHandStatus(false)
+      }
+    }
+  )
 
   const raisedHands = () => {
     const listMap = new Map<string, RaisedHandUser>()
@@ -42,18 +46,17 @@ export function useHandRaises() {
   }
 
   const raiseHand = () => setHandStatus(true)
+  const lowerHand = (identity: string) =>
+    sendLowerHand({ identity }, { destinationIdentities: [identity], reliable: true })
+  const lowerHandLocal = () => setHandStatus(false)
   const toggleHand = () => setHandStatus(!isRaised)
-  const lowerHand = (identity: string) => {
-    if (localParticipant) {
-      send(identity, { reliable: false, destinationIdentities: [identity] })
-    }
-  }
 
   return {
     isRaised,
     raisedHands: raisedHands(),
     raiseHand,
     lowerHand,
+    lowerHandLocal,
     toggleHand,
   }
 }

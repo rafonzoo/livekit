@@ -30,3 +30,12 @@ export interface TabProps {
   parentId?: number
   description?: string
 }
+
+export interface ParticipantStatus {
+  isSpeaking: boolean
+  isRecording: boolean
+  isWhiteboard: boolean
+  isPresentation: boolean
+  isWatchYoutube: boolean
+  isHandRaised: boolean
+}

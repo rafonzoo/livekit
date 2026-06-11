@@ -101,6 +101,25 @@ export function useMediaControls(options?: MediaControlsOption) {
     track.toggle(enabled)
   })
 
+  const handleManualToggleAudio = (enabled: boolean) => {
+    setAudioEnabled(enabled)
+
+    if (enabled) {
+      setMedia((prev) => ({
+        ...prev,
+        audio: { deviceId: audioDeviceId },
+      }))
+    } else {
+      setMedia((prev) => ({ ...prev, audio: false }))
+    }
+
+    if (room?.localParticipant) {
+      room.localParticipant
+        .setMicrophoneEnabled(enabled)
+        .catch((err) => console.error('Failed to respond to the admin voice command', err))
+    }
+  }
+
   const handleToggleAudio = () => {
     setAudioEnabled((prev) => !prev)
 
@@ -226,6 +245,7 @@ export function useMediaControls(options?: MediaControlsOption) {
     setMedia,
 
     // Handlers
+    handleManualToggleAudio,
     handleToggleAudio,
     handleToggleVideo,
     handleToggleShareScreen,

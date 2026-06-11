@@ -16,6 +16,7 @@ import {
   useRoomContext,
 } from '@livekit/components-react'
 import { cn } from '@/lib/utils'
+import { useTabsParticipant } from '@/hooks/use-tabs-participant'
 import { useParamsState, useConferenceRoom } from '@/hooks'
 import { RoomToast, RoomPanel, RoomControl, RoomCanvas } from '@/feat/Room'
 import { RoomTabs } from '@/feat/const'
@@ -74,6 +75,8 @@ export const RoomLayout: FC<ComponentProps<'main'>> = ({ className, children, ..
   const { tabsCode } = useParamsState()
   const currentTab = RoomTabs.find(({ id }) => tabsCode === id)
   const RoomPanelContent = currentTab?.content?.() ?? (() => null)
+  const {syncTabParticipant} = useTabsParticipant()
+  syncTabParticipant()
 
   return (
     <LayoutContextProvider value={layoutContext}>

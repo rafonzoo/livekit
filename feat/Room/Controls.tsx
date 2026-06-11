@@ -11,6 +11,7 @@ import {
   useRoomContext,
   useConnectionState,
 } from '@livekit/components-react'
+import { useRoomEventBus } from '@/hooks/use-event-bus'
 import { useParamsState, useMediaControls } from '@/hooks'
 import { ToggleTrack } from '@/components/ToggleTrack'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
@@ -25,10 +26,15 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
     videoEnabled,
     shareScreenEnabled,
     handleToggleAudio,
+    handleManualToggleAudio,
     handleToggleVideo,
     handleToggleShareScreen,
   } = useMediaControls({ room })
   const state = useConnectionState(room)
+
+  useRoomEventBus('app:trigger-manual-audio', (payload) => {
+    handleManualToggleAudio(payload.enabled)
+  })
 
   if (state === ConnectionState.Connecting) {
     return null

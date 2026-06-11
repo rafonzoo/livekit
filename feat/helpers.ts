@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react'
 import type { LocalParticipant, VideoCodec } from 'livekit-client'
+import type { ParticipantAttributes } from '@/hooks/use-tabs-participant'
 import type { MessageType } from '@/feat/enum'
+import type { ParticipantStatus } from './types'
 import { isValidElement, Children, cloneElement } from 'react'
 import { videoCodecs } from 'livekit-client'
 import { cn } from '@/lib/utils'
+import { ScreenCode } from '@/feat/enum'
 import { ChunkSize, ColorPalette } from '@/feat/const'
 
 export function roomOptionsStringifyReplacer(key: string, val: unknown) {
@@ -173,4 +176,33 @@ export function cloneSingleChild(
     return child
   })
 }
-/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access */
+
+export const getParticipantStatus = (
+  isSpeaking: boolean,
+  attributes?: ParticipantAttributes,
+  mode: 'arrayString' | 'object' = 'object'
+): string[] | ParticipantStatus => {
+  if (!attributes) return []
+
+  if (mode === 'arrayString') {
+    return [
+      isSpeaking && 'Sedang berbicara',
+      attributes.SCREEN_ACTIVE === ScreenCode.Recording.toString() && 'Sedang merekam',
+      attributes.SCREEN_ACTIVE === ScreenCode.Whiteboard.toString() &&
+        'Sedang menampilkan papan tulis',
+      attributes.SCREEN_ACTIVE === ScreenCode.Presentation.toString() && 'Sedang presentasi',
+      attributes.SCREEN_ACTIVE === ScreenCode.WatchYoutube.toString() && 'Sedang menonton YouTube',
+
+      String(attributes.HAND_RAISED) === 'true' && 'Sedang mengangkat tangan',
+    ].filter(Boolean) as string[]
+  } else {
+    return {
+      isSpeaking,
+      isRecording: attributes.SCREEN_ACTIVE === ScreenCode.Recording.toString(),
+      isWhiteboard: attributes.SCREEN_ACTIVE === ScreenCode.Whiteboard.toString(),
+      isPresentation: attributes.SCREEN_ACTIVE === ScreenCode.Presentation.toString(),
+      isWatchYoutube: attributes.SCREEN_ACTIVE === ScreenCode.WatchYoutube.toString(),
+      isHandRaised: String(attributes.HAND_RAISED) === 'true',
+    } satisfies ParticipantStatus
+  }
+}
