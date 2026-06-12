@@ -27,16 +27,103 @@ import { getParticipantStatus } from '@/feat/helpers'
 import { HugeIcon } from '@/components/HugeIcon'
 import { Button } from '@/components/Button'
 
-function ListParticipant() {
+export function ListParticipantPending() {
+  const { waitingParticipantGroups, handleRemoteParticipantPending } = useTabsParticipant()
+
+  return (
+    <div
+      className={cn('flex w-full max-w-sm flex-col bg-white', {
+        hidden: !waitingParticipantGroups[0].lists.length,
+      })}
+    >
+      <TabsListGroups>
+        {waitingParticipantGroups.map(({ id, headline, lists }) => (
+          <TabsListGroup key={id} className='flex flex-col'>
+            <div className='flex items-center justify-between pb-2'>
+              <TabsListTitle>{headline}</TabsListTitle>
+              <p className='text-sm'>{lists.length} orang</p>
+            </div>
+
+            <TabsList className='max-h-58 space-y-2 overflow-y-auto px-2'>
+              {lists.map(({ id: identity, name }) => {
+                return (
+                  <TabsListItem
+                    key={identity}
+                    className='relative flex items-center justify-between'
+                  >
+                    <div className='flex h-10 w-10 items-center justify-center rounded-full border border-neutral-400 bg-red-50'>
+                      <span className='font-semibold text-red-800 uppercase'>
+                        {name?.slice(0, 2)}
+                      </span>
+                    </div>
+
+                    <TabsListItemContent className='h-6'>
+                      <TabsListItemTitle className='max-w-47.5 truncate'>{name}</TabsListItemTitle>
+                    </TabsListItemContent>
+
+                    <menu className='grid grid-cols-2 items-center gap-2'>
+                      <Button
+                        onClick={() => handleRemoteParticipantPending(identity, 'REJECTED')}
+                        className={cn(
+                          'mt-4 flex w-full shrink-0 items-center justify-center gap-2 rounded-md border-red-200 bg-transparent p-1 px-3 text-xs text-red-800'
+                        )}
+                      >
+                        <span>Tolak </span>
+                      </Button>
+                      <Button
+                        onClick={() => handleRemoteParticipantPending(identity, 'APPROVED')}
+                        className={cn(
+                          'mt-4 flex w-full shrink-0 items-center justify-center gap-2 rounded-md border-green-200 bg-transparent p-1 px-3 text-xs text-green-800'
+                        )}
+                      >
+                        <span>Terima </span>
+                      </Button>
+                    </menu>
+                  </TabsListItem>
+                )
+              })}
+            </TabsList>
+          </TabsListGroup>
+        ))}
+      </TabsListGroups>
+
+      <div
+        className={cn('grid grid-cols-2 gap-2', {
+          hidden: !waitingParticipantGroups[0].lists.length,
+        })}
+      >
+        <Button
+          onClick={() => handleRemoteParticipantPending('ALL', 'REJECTED')}
+          className={cn(
+            'mt-4 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-red-200 p-3 text-sm text-red-800'
+          )}
+        >
+          <span>Tolak Semua</span>
+        </Button>
+        <Button
+          onClick={() => handleRemoteParticipantPending('ALL', 'APPROVED')}
+          className={cn(
+            'mt-4 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-green-200 p-3 text-sm text-green-800'
+          )}
+        >
+          <span>Terima Semua</span>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function ListParticipant() {
   const {
     participantGroups,
+    waitingParticipantGroups,
     shouldMuteAll,
     activeMenuId,
     menuRef,
     setActiveMenuId,
     handleBroadcastMuteAll,
     handleParticipantMute,
-    handleDisconnect,
+    handleDismissParticipant,
   } = useTabsParticipant()
   const { lowerHand, lowerHandLocal } = useHandRaises()
 
@@ -49,14 +136,19 @@ function ListParticipant() {
               <TabsListTitle>{headline}</TabsListTitle>
             </div>
 
-            <TabsList className='max-h-90 space-y-2 overflow-y-auto px-2'>
+            <TabsList
+              className={cn('max-h-92 space-y-2 overflow-y-auto px-2', {
+                'max-h-78': waitingParticipantGroups[0].lists.length === 2,
+                'max-h-52': waitingParticipantGroups[0].lists.length >= 3,
+              })}
+            >
               {lists.map(({ id: identity, name, isSpeaking, isMuted, isModerator, attributes }) => {
                 const statusList = getParticipantStatus(
                   isSpeaking,
                   attributes,
                   'arrayString'
                 ) as string[]
-                const statusText = statusList.length > 0 ? statusList.join(', ') : 'Idle'
+                const statusText = statusList.length > 0 ? statusList.join(', ') : '-'
                 const status = getParticipantStatus(
                   isSpeaking,
                   attributes,
@@ -75,7 +167,7 @@ function ListParticipant() {
                     </div>
 
                     <TabsListItemContent>
-                      <TabsListItemTitle className='max-w-47.5 truncate'>{name}</TabsListItemTitle>
+                      <TabsListItemTitle className='max-w-45.5 truncate'>{name}</TabsListItemTitle>
                       <TabsListItemText
                         className='max-w-50 truncate text-xs text-neutral-500'
                         title={statusText}
@@ -142,7 +234,7 @@ function ListParticipant() {
                                 text: 'Keluarkan peserta',
                                 className: cn('bg-red-100 text-red-600 hover:bg-red-200'),
                                 iconColor: '#dc2626',
-                                onClick: () => handleDisconnect(identity),
+                                onClick: () => handleDismissParticipant(identity),
                               },
                               {
                                 icon: BlockGameIcon,
@@ -189,5 +281,3 @@ function ListParticipant() {
     </div>
   )
 }
-
-export default ListParticipant

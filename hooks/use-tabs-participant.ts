@@ -1,17 +1,10 @@
 'use client'
 
-import type { MouseEvent } from 'react'
 import type { ScreenCode } from '@/feat/enum'
 import { useState, useEffect, useRef } from 'react'
 import { useParticipants, useLocalParticipant, useRoomContext } from '@livekit/components-react'
 import { useDataChannel } from '@/hooks'
-import { LiveKitAction, ParticipantAttribute } from '@/feat/enum'
-
-export interface ImperativeContent {
-  code: 0 | ScreenCode
-  onRecord?: boolean
-  handle: (e: MouseEvent<HTMLButtonElement>) => void
-}
+import { EventBus, LiveKitAction, ParticipantAttribute } from '@/feat/enum'
 
 export interface ParticipantAttributes {
   SCREEN_ACTIVE_URL: string
@@ -20,7 +13,7 @@ export interface ParticipantAttributes {
   HAND_RAISED: boolean
 }
 
-export interface ParticipantItem {
+export interface ParticipantList {
   id: string
   name: string
   isSpeaking: boolean
@@ -30,11 +23,25 @@ export interface ParticipantItem {
   hide: boolean
 }
 
+export interface ParticipantListPending extends Omit<
+  ParticipantList,
+  'isSpeaking' | 'isMuted' | 'isModerator'
+> {
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+}
+
+export interface ParticipantPendingGroup {
+  id: string
+  headline: string
+  hide: boolean
+  lists: ParticipantListPending[]
+}
+
 export interface ParticipantGroup {
   id: string
   headline: string
   hide: boolean
-  lists: ParticipantItem[]
+  lists: ParticipantList[]
 }
 
 function SyncTabParticipant() {
@@ -44,7 +51,7 @@ function SyncTabParticipant() {
     if (!room) return
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    room.emit('app:trigger-manual-audio' as any, { enabled: false })
+    room.emit(EventBus.ManualToggleAudio as any, { enabled: false })
   }
 
   useDataChannel<{ enabled: boolean }>(LiveKitAction.AllMicrophoneUpdate, ({ payload }) => {
@@ -91,118 +98,33 @@ export function useTabsParticipant() {
     return p.isMicrophoneEnabled
   })
 
-  const waitingParticipantGroups: ParticipantGroup[] = [
+  // TODO: Participant pending masih coba2
+  const [waitingParticipants, setWaitingParticipants] = useState<ParticipantListPending[]>([
+    {
+      hide: false,
+      id: 'satu',
+      name: 'Anto',
+      status: 'PENDING',
+    },
+    {
+      hide: false,
+      id: 'dua',
+      name: 'Anto Example',
+      status: 'PENDING',
+    },
+    {
+      hide: false,
+      id: 'tiga',
+      name: 'Anto tiga exampe',
+      status: 'PENDING',
+    },
+  ])
+  const waitingParticipantGroups: ParticipantPendingGroup[] = [
     {
       id: 'waiting',
       headline: 'Menunggu',
       hide: false,
-      lists: [
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-        {
-          hide: false,
-          id: 'waiting',
-          name: 'Menunggu',
-          isSpeaking: false,
-          isMuted: false,
-        },
-      ],
+      lists: waitingParticipants,
     },
   ]
 
@@ -244,6 +166,11 @@ export function useTabsParticipant() {
   ]
 
   // SEND DATA CHANNEL
+  const { send: sendWaiting } = useDataChannel<{
+    subAction: 'APPROVED' | 'REJECTED'
+    targetId: string
+  }>(LiveKitAction.WaitingUpdate, () => null)
+
   const { send: sendbroadcastMicrophoneMuteAll } = useDataChannel<{ enabled: boolean }>(
     LiveKitAction.AllMicrophoneUpdate,
     () => null
@@ -259,10 +186,61 @@ export function useTabsParticipant() {
     () => null
   )
 
+  // LISTENER
+  useDataChannel<{ subAction: 'APPROVED' | 'REJECTED'; targetId: string }>(
+    LiveKitAction.WaitingUpdate,
+    ({ payload }) => {
+      if (payload?.subAction === 'APPROVED' || payload?.subAction === 'REJECTED') {
+        handleLocaParticipantPending(payload.targetId)
+      }
+    }
+  )
+
+  const syncTabParticipant = SyncTabParticipant
+
   // HANDLER
+  const handleLocaParticipantPending = (identity: string) => {
+    if (identity === 'ALL') {
+      setWaitingParticipants([])
+    } else {
+      setWaitingParticipants((prev) => prev.filter((p) => p.id !== identity))
+    }
+  }
+
+  const handleRemoteParticipantPending = (identity: string, status: 'APPROVED' | 'REJECTED') => {
+    if (identity === 'ALL') {
+      waitingParticipants.forEach((participant) => {
+        sendWaiting(
+          {
+            subAction: status,
+            targetId: participant.id,
+          },
+          {
+            reliable: true,
+          }
+        )
+      })
+      handleLocaParticipantPending('ALL')
+    } else {
+      sendWaiting(
+        {
+          subAction: status,
+          targetId: identity,
+        },
+        {
+          reliable: true,
+        }
+      )
+      handleLocaParticipantPending(identity)
+    }
+  }
+
   const handleBroadcastMuteAll = async () => {
     const nextState = !shouldMuteAll
     try {
+      // TODO: ganti pake modal jika suka ada shadcn
+      const confirm = window.confirm(`Bisukan semua peserta ?`)
+      if (!confirm) return
       sendbroadcastMicrophoneMuteAll({ enabled: nextState })
     } catch (error) {
       console.error('Gagal mengirim perintah mic masal:', error)
@@ -290,7 +268,7 @@ export function useTabsParticipant() {
     setActiveMenuId(null)
   }
 
-  const handleDisconnect = (identity: string) => {
+  const handleDismissParticipant = (identity: string) => {
     sendDisconnect({ disconnect: true }, { destinationIdentities: [identity], reliable: true })
   }
 
@@ -300,10 +278,13 @@ export function useTabsParticipant() {
     shouldMuteAll,
     activeMenuId,
     menuRef,
+    waitingParticipants,
     setActiveMenuId,
     handleBroadcastMuteAll,
     handleParticipantMute,
-    handleDisconnect,
-    syncTabParticipant: SyncTabParticipant,
+    handleDismissParticipant,
+    handleLocaParticipantPending,
+    handleRemoteParticipantPending,
+    syncTabParticipant,
   }
 }

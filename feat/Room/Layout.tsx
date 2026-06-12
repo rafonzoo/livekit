@@ -75,7 +75,7 @@ export const RoomLayout: FC<ComponentProps<'main'>> = ({ className, children, ..
   const { tabsCode } = useParamsState()
   const currentTab = RoomTabs.find(({ id }) => tabsCode === id)
   const RoomPanelContent = currentTab?.content?.() ?? (() => null)
-  const {syncTabParticipant} = useTabsParticipant()
+  const { syncTabParticipant } = useTabsParticipant()
   syncTabParticipant()
 
   return (

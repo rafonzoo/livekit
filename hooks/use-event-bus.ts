@@ -1,9 +1,10 @@
 import type { EventEmitter } from 'events'
+import type { EventBus } from '@/feat/enum'
 import { useEffect } from 'react'
 import { useRoomContext } from '@livekit/components-react'
 
 interface EventBusPayloads {
-  'app:trigger-manual-audio': { enabled: boolean }
+  [EventBus.ManualToggleAudio]: { enabled: boolean }
 }
 
 type EventName = keyof EventBusPayloads

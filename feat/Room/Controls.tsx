@@ -13,6 +13,7 @@ import {
 } from '@livekit/components-react'
 import { useRoomEventBus } from '@/hooks/use-event-bus'
 import { useParamsState, useMediaControls } from '@/hooks'
+import { EventBus } from '@/feat/enum'
 import { ToggleTrack } from '@/components/ToggleTrack'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { HandRaisedIcon } from '@/components/HandRaised'
@@ -32,7 +33,7 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
   } = useMediaControls({ room })
   const state = useConnectionState(room)
 
-  useRoomEventBus('app:trigger-manual-audio', (payload) => {
+  useRoomEventBus(EventBus.ManualToggleAudio, (payload) => {
     handleManualToggleAudio(payload.enabled)
   })
 

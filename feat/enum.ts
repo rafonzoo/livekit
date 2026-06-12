@@ -19,6 +19,7 @@ export enum LiveKitAction {
   MicrophoneUpdate = 'MICROPHONE_UPDATE',
   PollingVoteNow = 'POLLING_VOTE_NOW',
   AllMicrophoneUpdate = 'ALL_MICROPHONE_UPDATE',
+  WaitingUpdate = 'WAITING_ROOM',
   DisconnectRoom = 'ROOM_DISCONNECT',
 }
 
@@ -29,6 +30,10 @@ export enum ParticipantAttribute {
   ScreenActiveUrl = 'SCREEN_ACTIVE_URL',
   ScreenActivePolling = 'SCREEN_ACTIVE_POLLING',
   HandRaised = 'HAND_RAISED',
+}
+
+export enum EventBus {
+  ManualToggleAudio = 'MANUAL_TOGGLE_AUDIO',
 }
 
 export enum ConnectionInterceptor {
