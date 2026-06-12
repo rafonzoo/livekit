@@ -16,7 +16,9 @@ export async function updateRoomMetadata(roomName: string, metadataData: object)
 
     return { data: 'Success' }
   } catch (error) {
-    console.log(error)
-    return { data: null, error: { message: 'Failed to update room metadata:', error } }
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to update room metadata'),
+    }
   }
 }

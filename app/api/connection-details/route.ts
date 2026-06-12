@@ -57,15 +57,16 @@ export async function GET(request: NextRequest) {
 
     const rooms = await svc.listRooms()
 
-    if (!rooms.some((room) => room.name === roomName)) {
-      await svc.updateRoomMetadata(roomName, JSON.stringify({ polling: [] }))
-    } else {
-      await svc.createRoom({
-        name: roomName,
-        metadata: JSON.stringify({ polling: [] }),
-        emptyTimeout: 10 * 60, // 10 minutes
-      })
-    }
+    try {
+      if (!rooms.some((room) => room.name === roomName)) {
+        await svc.createRoom({
+          name: roomName,
+          metadata: JSON.stringify({ polling: [] }),
+          emptyTimeout: 10 * 60, // 10 minutes
+        })
+      }
+      // eslint-disable-next-line no-empty
+    } catch {}
 
     // Return connection details
     const data: ConnectionDetails = {

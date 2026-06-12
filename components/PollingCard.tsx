@@ -6,6 +6,7 @@ import { cn, djs } from '@/lib/utils'
 import { formatCountdown } from '@/feat/helpers'
 
 export interface PollingCardProps {
+  loading?: boolean
   openedAt: number
   withTimer?: boolean
   question: string
@@ -23,7 +24,7 @@ export interface PollingOption {
 }
 
 export interface PollingMessage {
-  id: number
+  id: string
   openedAt: number
   closedAt: number | null
   identity: string
@@ -46,6 +47,7 @@ export const PollingCard: FC<PollingCardProps> = ({
   totalParticipant,
   isResult = false,
   withTimer = false,
+  loading = false,
   onCheckedChange,
   onClosePolling,
 }) => {
@@ -194,8 +196,12 @@ export const PollingCard: FC<PollingCardProps> = ({
         ))}
       </ul>
       {isResult && onClosePolling && (
-        <button onClick={() => onClosePolling()} className={cn(ACTION_CLASSES)}>
-          Tutup Pendapat {counter >= 0 ? `(${formatCountdown(counter)})` : ''}
+        <button disabled={loading} onClick={() => onClosePolling()} className={cn(ACTION_CLASSES)}>
+          {loading ? (
+            'Menutup pendapat...'
+          ) : (
+            <>Tutup Pendapat {counter >= 0 ? `(${formatCountdown(counter)})` : ''}</>
+          )}
         </button>
       )}
     </div>

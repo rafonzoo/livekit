@@ -2,6 +2,7 @@ import type { PollingMessage, PollingOption } from '@/components/PollingCard'
 import { useEffect, useState, useEffectEvent } from 'react'
 import { RoomEvent } from 'livekit-client'
 import { useRoomContext } from '@livekit/components-react'
+import { generateRoomId } from '@/lib/utils'
 import { useParamsState } from '@/hooks/use-params-state'
 import { useDataChannel } from '@/hooks/use-data-channel'
 import { useRoomState } from '@/feat/Room'
@@ -10,7 +11,7 @@ import { updateRoomMetadata } from '@/example-api'
 
 interface VoteMessage {
   optionId: number
-  id: number
+  id: string
   identity: string
   name: string
 }
@@ -18,6 +19,7 @@ interface VoteMessage {
 export function usePollingSession(onReady?: () => void) {
   const { screen, isHost, stopActiveScreen } = useRoomState()
   const { openPanelOpen, closePanel } = useParamsState()
+  const [loading, setLoading] = useState(false)
   const parsed = JSON.parse(screen?.polling ?? '') as PollingMessage[]
   const pollings = { ...parsed.find((polling) => !polling.closedAt) }
   const { id, openedAt = -1, totalParticipant = 100, question = '', options = [] } = pollings
@@ -88,6 +90,8 @@ export function usePollingSession(onReady?: () => void) {
     const prev = room.localParticipant.attributes[ParticipantAttribute.ScreenActivePolling]
     if (!prev || !room.metadata) return
 
+    setLoading(true)
+
     try {
       const roomMetadata: { polling: PollingMessage[] } = JSON.parse(room.metadata)
       const localPolling: PollingMessage[] = JSON.parse(prev)
@@ -102,18 +106,20 @@ export function usePollingSession(onReady?: () => void) {
       })
 
       if (error) {
-        throw error.error
+        throw error
       }
 
       openPanelOpen()
       stopActiveScreen()
     } catch (e) {
       console.log('Failed to end polling:', e)
+    } finally {
+      setLoading(false)
     }
   }
 
   useEffect(() => prepareToAnswer(), [])
-  return { totalParticipant, openedAt, question, options, isHost, selectVote, endPolling }
+  return { totalParticipant, openedAt, question, options, isHost, loading, selectVote, endPolling }
 }
 
 export function usePollingQuestion(config?: { optionLength?: number }) {
@@ -156,7 +162,7 @@ export function usePollingQuestion(config?: { optionLength?: number }) {
     try {
       const prevMessage: PollingMessage[] = JSON.parse(prev)
       const payload: PollingMessage = {
-        id: Date.now(),
+        id: `${generateRoomId()}-${Date.now()}`,
         identity: room.localParticipant.identity,
         totalParticipant,
         question,
@@ -188,6 +194,7 @@ export function usePollingQuestion(config?: { optionLength?: number }) {
       try {
         const { polling }: { polling: PollingMessage[] } = JSON.parse(metadata)
         setHistory(polling)
+        setCollapse((prev) => (!prev ? !!polling.length : prev))
       } catch (e) {
         console.log('Failed to update metadata:', e)
       }
@@ -197,8 +204,9 @@ export function usePollingQuestion(config?: { optionLength?: number }) {
       if (!room.metadata) return
 
       try {
-        const metadata: { polling: PollingMessage[] } = JSON.parse(room.metadata)
-        setHistory(metadata.polling)
+        const { polling }: { polling: PollingMessage[] } = JSON.parse(room.metadata)
+        setHistory(polling)
+        setCollapse((prev) => (!prev ? !!polling.length : prev))
       } catch (e) {
         console.log('Failed to get metadata:', e)
       }
