@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 import type { AccessTokenOptions, VideoGrant } from 'livekit-server-sdk'
 import type { ConnectionDetails } from '@/feat/types'
 import { NextResponse } from 'next/server'
-import { AccessToken } from 'livekit-server-sdk'
+import { AccessToken, RoomServiceClient } from 'livekit-server-sdk'
 import { randomString } from '@/lib/utils'
 import { getLiveKitURL } from '@/feat/helpers'
 import { ConnectionInterceptor } from '@/feat/enum'
@@ -14,6 +14,12 @@ const API_SECRET = process.env.LIVEKIT_API_SECRET
 const LIVEKIT_URL = process.env.LIVEKIT_URL
 
 const COOKIE_KEY = 'random-participant-postfix'
+
+const svc = new RoomServiceClient(
+  process.env.LIVEKIT_URL ?? '',
+  process.env.LIVEKIT_API_KEY,
+  process.env.LIVEKIT_API_SECRET
+)
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,6 +54,19 @@ export async function GET(request: NextRequest) {
       },
       roomName
     )
+
+    const rooms = await svc.listRooms()
+
+    try {
+      if (!rooms.some((room) => room.name === roomName)) {
+        await svc.createRoom({
+          name: roomName,
+          metadata: JSON.stringify({ polling: [] }),
+          emptyTimeout: 10 * 60, // 10 minutes
+        })
+      }
+      // eslint-disable-next-line no-empty
+    } catch {}
 
     // Return connection details
     const data: ConnectionDetails = {

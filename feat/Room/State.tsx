@@ -32,7 +32,7 @@ export interface StateContextProps {
   isHost: boolean
   ydoc: Doc | null
   startActiveScreen: (code: ScreenID, payload?: ScreenPayload) => Promise<void>
-  stopActiveScreen: (payload?: { polling: string }) => Promise<void>
+  stopActiveScreen: () => Promise<void>
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
 }
@@ -89,17 +89,14 @@ export const RoomState: FC<{ children?: ReactNode }> = ({ children }) => {
     }
   }
 
-  const stopActiveScreen = async (payload?: { polling: string }) => {
+  const stopActiveScreen = async () => {
     if (!room?.localParticipant) return
     try {
       await room.localParticipant.setAttributes({
         [ParticipantAttribute.ScreenActive]: '',
         [ParticipantAttribute.ScreenActiveHost]: '',
         [ParticipantAttribute.ScreenActiveUrl]: '',
-        // No need to remove polling for polling history but is SHOULD update `closedAt` to filter new polling session
-        ...(payload?.polling
-          ? { [ParticipantAttribute.ScreenActivePolling]: payload.polling }
-          : {}),
+        [ParticipantAttribute.ScreenActivePolling]: '',
       })
     } catch (e) {
       console.log('Failed to stop active screen:', e)
