@@ -24,7 +24,6 @@ const RoomPanelComponent: FC<{ children?: ReactNode }> = ({ children }) => {
         TabsCode.TabsChats !== tabsCode && 'overflow-x-hidden overflow-y-auto *:p-5'
       )}
     >
-      {/* {hasChild && <div></div>} */}
       {!exludedTabs.includes(tabsCode) && children}
       {state !== ConnectionState.Connecting && (
         <>

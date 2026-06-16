@@ -31,8 +31,8 @@ export enum ParticipantAttribute {
 
 export enum ConnectionInterceptor {
   Unknown = 'unknown',
-  Blocked = 'blocked',
-  Waiting = 'waiting',
+  Banned = 'banned',
+  Pending = 'pending',
   Limit = 'limit',
 }
 

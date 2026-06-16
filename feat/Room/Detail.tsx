@@ -33,12 +33,14 @@ export const RoomDetail: FC<RoomDetailProps> = (props) => {
 
   // Reference
   const preJoinDefaults = useRef({ username: '', audioEnabled: false, videoEnabled: false })
-  const connectionDetailsRef = useRef<ConnectionDetails | undefined>(undefined)
+  const roomNameRef = useRef(props.roomName)
+  const participantNameRef = useRef('')
   const isReady = !!connectionDetails && !!preJoinChoices
   const handlePreJoinError = useRef((e: unknown) => console.log('Failed to handle prejoin:', e))
   const handlePreJoinSubmit = useRef(async ({ password, ...values }: LocalUserChoicesPassword) => {
     const url = new URL('/api/connection-details', window.location.origin)
 
+    participantNameRef.current = values.username
     url.searchParams.append('roomName', props.roomName)
     url.searchParams.append('participantName', values.username)
 
@@ -50,17 +52,13 @@ export const RoomDetail: FC<RoomDetailProps> = (props) => {
 
     try {
       const connectionDetailsResp = await fetch(url.toString())
-      const { interceptor, ...connectionDetailsData } =
-        (await connectionDetailsResp.json()) as ConnectionDetails & {
-          interceptor?: ConnectionInterceptor
-        }
-
-      if (interceptor) {
-        setInterceptor(interceptor)
-        connectionDetailsRef.current = connectionDetailsData
-      } else {
-        setConnectionDetails(connectionDetailsData)
+      const { interceptor, data } = (await connectionDetailsResp.json()) as {
+        data?: ConnectionDetails
+        interceptor?: ConnectionInterceptor
       }
+
+      if (data) setConnectionDetails(data)
+      if (interceptor) setInterceptor(interceptor)
     } catch (e) {
       setInterceptor(ConnectionInterceptor.Unknown)
       console.log('Failed to join the room:', e)
@@ -101,10 +99,41 @@ export const RoomDetail: FC<RoomDetailProps> = (props) => {
   }, [isReady])
 
   useEffect(() => {
-    if (interceptor === ConnectionInterceptor.Waiting) {
-      const timeout = setTimeout(() => setConnectionDetails(connectionDetailsRef.current), 5_000)
+    if (interceptor === ConnectionInterceptor.Pending) {
+      const url = new URL('/api/waiting-room/request', window.location.origin)
 
-      return () => window.clearTimeout(timeout)
+      url.searchParams.append('roomName', roomNameRef.current)
+      url.searchParams.append('participantName', participantNameRef.current)
+
+      let es: EventSource
+      const connect = () => {
+        es = new EventSource(url)
+        es.onmessage = (e: MessageEvent<string>) => {
+          const { status, data }: { status: string; data: ConnectionDetails } = JSON.parse(e.data)
+          if (status === 'accepted') {
+            setConnectionDetails(data)
+            es.close()
+          }
+          if (status === 'rejected') {
+            // @TODO
+            alert('Kamu telah di tolak untuk join ruangan')
+
+            handleBackToPrejoin.current()
+            es.close()
+          }
+        }
+
+        es.onerror = () => {
+          // @TODO
+          alert('Tidak dapat mengakses ruangan saat ini')
+
+          handleBackToPrejoin.current()
+          es.close()
+        }
+      }
+
+      connect()
+      return () => es.close()
     }
   }, [interceptor])
 

@@ -1,5 +1,3 @@
-'use server'
-
 import type { NextRequest } from 'next/server'
 import type { AccessTokenOptions, VideoGrant } from 'livekit-server-sdk'
 import type { ConnectionDetails } from '@/feat/types'
@@ -15,6 +13,12 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL
 
 const COOKIE_KEY = 'random-participant-postfix'
 
+// Simple in-memory store (tell backend to use Redis or other mechanism)
+export const waitingClients = new Map<string, ReadableStreamDefaultController>()
+export const blockedClients = new Map<string, ReadableStreamDefaultController>()
+export const hostClients = new Map<string, ReadableStreamDefaultController>()
+export const heartbeatMap = new Map<string, ReturnType<typeof setInterval>>()
+
 const svc = new RoomServiceClient(
   process.env.LIVEKIT_URL ?? '',
   process.env.LIVEKIT_API_KEY,
@@ -22,6 +26,9 @@ const svc = new RoomServiceClient(
 )
 
 export async function GET(request: NextRequest) {
+  const pendingParticipant: string[] = ['asd'] // From backend, in-memory or redis
+  const bannedParticipant: string[] = ['xxx'] // From backend, in-memory or redis
+
   try {
     // Parse query parameters
     const roomName = request.nextUrl.searchParams.get('roomName')
@@ -38,12 +45,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (typeof roomName !== 'string') {
-      return new NextResponse('Missing required query parameter: roomName', {
-        status: 400,
-      })
+      return NextResponse.json(
+        { message: 'Missing required query parameter: roomName' },
+        {
+          status: 400,
+        }
+      )
     }
+
     if (participantName === null) {
-      return new NextResponse('Missing required query parameter: participantName', { status: 400 })
+      return NextResponse.json(
+        { message: 'Missing required query parameter: participantName' },
+        { status: 400 }
+      )
     }
 
     const participantToken = await createParticipantToken(
@@ -55,18 +69,101 @@ export async function GET(request: NextRequest) {
       roomName
     )
 
-    const rooms = await svc.listRooms()
+    // Return connection details
+    const data: ConnectionDetails = {
+      serverUrl: livekitServerUrl,
+      roomName: roomName,
+      participantToken: participantToken,
+      participantName: participantName,
+    }
 
+    // NOTE: THIS IS FOR TESTING PURPOSE. EVERYONE - EVEN BANNED/BLOCKED CAN CREATE ROOM
+    // EXPECTED: ROOM ONLY CAN BE CREATED BY THE HOST (THIS IS ONLY FOR TESTING PURPOSE)
     try {
-      if (!rooms.some((room) => room.name === roomName)) {
-        await svc.createRoom({
-          name: roomName,
-          metadata: JSON.stringify({ polling: [] }),
-          emptyTimeout: 10 * 60, // 10 minutes
-        })
-      }
+      await svc.createRoom({
+        emptyTimeout: 10 * 60,
+        name: roomName,
+      })
       // eslint-disable-next-line no-empty
     } catch {}
+
+    if (pendingParticipant.includes(participantName)) {
+      return NextResponse.json({ interceptor: ConnectionInterceptor.Pending }, { status: 302 })
+    }
+
+    if (bannedParticipant.includes(participantName)) {
+      return NextResponse.json({ interceptor: ConnectionInterceptor.Banned }, { status: 302 })
+    }
+
+    return NextResponse.json(
+      { data },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': `${COOKIE_KEY}=${randomParticipantPostfix}; Path=/; HttpOnly; SameSite=Strict; Secure; Expires=${getCookieExpirationTime()}`,
+        },
+      }
+    )
+  } catch (e) {
+    const err = new Error(e instanceof Error ? e.message : 'Internal server error')
+    return NextResponse.json({ message: err.message }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Parse query parameters
+    const roomName = request.nextUrl.searchParams.get('roomName')
+    const participantName = request.nextUrl.searchParams.get('participantName')
+    const metadata = request.nextUrl.searchParams.get('metadata') ?? ''
+    const region = request.nextUrl.searchParams.get('region')
+    const status = request.nextUrl.searchParams.get('status')
+    if (!LIVEKIT_URL) {
+      throw new Error('LIVEKIT_URL is not defined')
+    }
+    const livekitServerUrl = region ? getLiveKitURL(LIVEKIT_URL, region) : LIVEKIT_URL
+    const randomParticipantPostfix = request.cookies.get(COOKIE_KEY)?.value ?? randomString(4)
+    if (livekitServerUrl === undefined) {
+      throw new Error('Invalid region')
+    }
+
+    if (typeof roomName !== 'string') {
+      return NextResponse.json(
+        { message: 'Missing required query parameter: roomName' },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    if (participantName === null) {
+      return NextResponse.json(
+        { message: 'Missing required query parameter: participantName' },
+        { status: 400 }
+      )
+    }
+
+    if (status === null) {
+      return NextResponse.json(
+        { message: 'Missing required query parameter: status' },
+        { status: 400 }
+      )
+    }
+
+    const controller = waitingClients.get(participantName)
+    if (!controller) {
+      return NextResponse.json({ message: 'No pending participant' }, { status: 403 })
+    }
+
+    const participantToken = await createParticipantToken(
+      {
+        identity: `${participantName}__${randomParticipantPostfix}`,
+        name: participantName,
+        metadata,
+      },
+      roomName
+    )
 
     // Return connection details
     const data: ConnectionDetails = {
@@ -76,26 +173,13 @@ export async function GET(request: NextRequest) {
       participantName: participantName,
     }
 
-    // Change this for testing
-    let interceptor: ConnectionInterceptor | null = null
+    controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ status, data })}\n\n`))
+    waitingClients.delete(participantName)
 
-    interceptor = (process.env.LIVEKIT_API_INTERCEPTOR ?? null) as never
-
-    if (!interceptor || interceptor === ConnectionInterceptor.Waiting) {
-      return new NextResponse(JSON.stringify({ ...data, interceptor }), {
-        status: !interceptor ? 200 : 307,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': `${COOKIE_KEY}=${randomParticipantPostfix}; Path=/; HttpOnly; SameSite=Strict; Secure; Expires=${getCookieExpirationTime()}`,
-        },
-      })
-    }
-
-    return new NextResponse(JSON.stringify({ interceptor }), { status: 500 })
-  } catch (error) {
-    if (error instanceof Error) {
-      return new NextResponse(error.message, { status: 500 })
-    }
+    return NextResponse.json({ message: 'Success' })
+  } catch (e) {
+    const err = new Error(e instanceof Error ? e.message : 'Internal server error')
+    return NextResponse.json({ message: err.message }, { status: 500 })
   }
 }
 
