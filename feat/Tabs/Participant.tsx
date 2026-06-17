@@ -39,16 +39,13 @@ export const TabsParticipant: FC = () => {
 
   async function handleParticipant(key: string, name: string, status: 'accepted' | 'rejected') {
     try {
-      const url = new URL('/api/connection-details', window.location.origin)
-      url.searchParams.append('roomName', roomInfo.name)
-      url.searchParams.append('participantName', name)
-      url.searchParams.append('status', status)
+      const url = new URL('/api/waiting-room/hosts', window.location.origin)
 
       setLoadingId((prev) => [...prev, key])
       await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomName: roomInfo.name, participantName: name }),
+        body: JSON.stringify({ status, name }),
       })
     } catch (e) {
       console.log('Failed to accept/reject:', e)

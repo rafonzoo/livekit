@@ -37,6 +37,7 @@ export const defaultPrejoin = {
 
 export interface LocalUserChoicesPassword extends LocalUserChoices {
   password: string
+  status?: string
 }
 
 export interface PreJoinProps extends Omit<PrejoinPropsBase, 'onSubmit' | 'onValidate'> {

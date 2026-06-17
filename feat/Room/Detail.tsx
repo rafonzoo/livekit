@@ -34,15 +34,19 @@ export const RoomDetail: FC<RoomDetailProps> = (props) => {
   // Reference
   const preJoinDefaults = useRef({ username: '', audioEnabled: false, videoEnabled: false })
   const roomNameRef = useRef(props.roomName)
-  const participantNameRef = useRef('')
+  const userChoiceRef = useRef<LocalUserChoicesPassword | null>(null)
   const isReady = !!connectionDetails && !!preJoinChoices
   const handlePreJoinError = useRef((e: unknown) => console.log('Failed to handle prejoin:', e))
   const handlePreJoinSubmit = useRef(async ({ password, ...values }: LocalUserChoicesPassword) => {
     const url = new URL('/api/connection-details', window.location.origin)
 
-    participantNameRef.current = values.username
+    userChoiceRef.current = { password, ...values }
     url.searchParams.append('roomName', props.roomName)
     url.searchParams.append('participantName', values.username)
+
+    if (values.status) {
+      url.searchParams.append('status', values.status)
+    }
 
     setPreJoinChoices(values)
     setLoading(true)
@@ -101,17 +105,21 @@ export const RoomDetail: FC<RoomDetailProps> = (props) => {
   useEffect(() => {
     if (interceptor === ConnectionInterceptor.Pending) {
       const url = new URL('/api/waiting-room/request', window.location.origin)
-
+      if (!userChoiceRef.current) {
+        return
+      }
       url.searchParams.append('roomName', roomNameRef.current)
-      url.searchParams.append('participantName', participantNameRef.current)
+      url.searchParams.append('participantName', userChoiceRef.current.username)
 
       let es: EventSource
       const connect = () => {
         es = new EventSource(url)
-        es.onmessage = (e: MessageEvent<string>) => {
-          const { status, data }: { status: string; data: ConnectionDetails } = JSON.parse(e.data)
+        es.onmessage = async (e: MessageEvent<string>) => {
+          const { status }: { status: string } = JSON.parse(e.data)
+          if (!userChoiceRef.current) return
+
           if (status === 'accepted') {
-            setConnectionDetails(data)
+            await handlePreJoinSubmit.current({ status, ...userChoiceRef.current })
             es.close()
           }
           if (status === 'rejected') {

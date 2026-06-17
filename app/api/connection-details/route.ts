@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     const participantName = request.nextUrl.searchParams.get('participantName')
     const metadata = request.nextUrl.searchParams.get('metadata') ?? ''
     const region = request.nextUrl.searchParams.get('region')
+    const status = request.nextUrl.searchParams.get('status')
     if (!LIVEKIT_URL) {
       throw new Error('LIVEKIT_URL is not defined')
     }
@@ -60,6 +61,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    if (!status && pendingParticipant.includes(participantName)) {
+      return NextResponse.json({ interceptor: ConnectionInterceptor.Pending }, { status: 302 })
+    }
+
+    if (!status && bannedParticipant.includes(participantName)) {
+      return NextResponse.json({ interceptor: ConnectionInterceptor.Banned }, { status: 302 })
+    }
+
     const participantToken = await createParticipantToken(
       {
         identity: `${participantName}__${randomParticipantPostfix}`,
@@ -83,17 +92,10 @@ export async function GET(request: NextRequest) {
       await svc.createRoom({
         emptyTimeout: 10 * 60,
         name: roomName,
+        metadata: JSON.stringify({ polling: [], banned: [] }),
       })
       // eslint-disable-next-line no-empty
     } catch {}
-
-    if (pendingParticipant.includes(participantName)) {
-      return NextResponse.json({ interceptor: ConnectionInterceptor.Pending }, { status: 302 })
-    }
-
-    if (bannedParticipant.includes(participantName)) {
-      return NextResponse.json({ interceptor: ConnectionInterceptor.Banned }, { status: 302 })
-    }
 
     return NextResponse.json(
       { data },

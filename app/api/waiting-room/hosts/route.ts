@@ -36,3 +36,18 @@ export async function GET(request: NextRequest) {
     },
   })
 }
+
+export async function POST(request: NextRequest) {
+  const req: { status: string; name: string } = await request.json()
+  const { status, name: participantName } = req
+
+  const controller = waitingClients.get(participantName)
+  if (!controller) {
+    return NextResponse.json({ message: 'No pending participant' }, { status: 403 })
+  }
+
+  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ status })}\n\n`))
+  waitingClients.delete(participantName)
+
+  return NextResponse.json({ message: 'success' })
+}
