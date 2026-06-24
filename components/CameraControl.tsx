@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { Check } from '@phosphor-icons/react'
 import { CameraIcon, CameraDisabledIcon, useRoomContext } from '@livekit/components-react'
-import { useCameraQuality } from '@/hooks/useCameraQuality'
+import { useCameraQuality } from '@/hooks/use-camera-quality'
 import { useMediaControls } from '@/hooks'
 import { CameraResolutionOptions } from '@/feat/const'
 import { ToggleTrack } from '@/components/ToggleTrack'
