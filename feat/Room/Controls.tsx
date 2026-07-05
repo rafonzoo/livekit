@@ -1,25 +1,28 @@
 'use client'
 
 import type { FC, ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { ConnectionState } from 'livekit-client'
-import { MonitorPlayIcon, PhoneSlashIcon, SmileyIcon } from '@phosphor-icons/react'
+import { MonitorPlayIcon, PhoneSlashIcon } from '@phosphor-icons/react'
 import {
   MicDisabledIcon,
-  CameraDisabledIcon,
   MicIcon,
-  CameraIcon,
   useRoomContext,
   useConnectionState,
+  CameraIcon,
+  CameraDisabledIcon,
 } from '@livekit/components-react'
-import { useParamsState, useMediaControls } from '@/hooks'
+import { cn } from '@/lib/utils'
+import { useMediaControls } from '@/hooks'
 import { ToggleTrack } from '@/components/ToggleTrack'
+// import { ReactionIcon } from '@/components/ReactionIcon'
 import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { HandRaisedIcon } from '@/components/HandRaised'
+import { CameraControl } from '@/components/CameraControl'
 import { ButtonIcon } from '@/components/Button'
 
 export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
   const room = useRoomContext()
-  const { router } = useParamsState()
   const {
     audioEnabled,
     videoEnabled,
@@ -29,6 +32,15 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
     handleToggleShareScreen,
   } = useMediaControls({ room })
   const state = useConnectionState(room)
+  const [activeState, setActiveState] = useState<'camera' | 'reaction' | ''>('')
+  const isCameraActive = activeState === 'camera'
+  const isReactionActive = activeState === 'reaction'
+
+  useEffect(() => {
+    if (!videoEnabled) {
+      setActiveState('')
+    }
+  }, [videoEnabled])
 
   if (state === ConnectionState.Connecting) {
     return null
@@ -45,27 +57,47 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
         {audioEnabled ? <MicIcon /> : <MicDisabledIcon />}
       </ToggleTrack>
       <div className='dark:bg-primary/50 flex items-center gap-1 rounded-full bg-red-200 p-1'>
-        <ToggleTrack
-          title={videoEnabled ? 'Tutup kamera' : 'Aktifkan kamera'}
-          isActive={videoEnabled}
-          onClick={handleToggleVideo}
-          className='size-8 md:size-10'
+        <CameraControl
+          isActive={isCameraActive}
+          isVideoEnabled={videoEnabled}
+          // onClick={() => setActiveState((prev) => (!prev || prev !== 'camera' ? 'camera' : ''))}
         >
-          {videoEnabled ? <CameraIcon /> : <CameraDisabledIcon />}
-        </ToggleTrack>
-        <button className='dark:hover:bg-primary/50 relative inline-flex size-8 items-center justify-center rounded-full hover:bg-red-300 md:size-10'>
-          <HugeIcon icon={ChevronUp} strokeWidth={2} />
-        </button>
+          <ToggleTrack
+            title={videoEnabled ? 'Tutup kamera' : 'Aktifkan kamera'}
+            isActive={videoEnabled}
+            onClick={handleToggleVideo}
+            className='size-8 md:size-10'
+          >
+            {videoEnabled ? <CameraIcon /> : <CameraDisabledIcon />}
+          </ToggleTrack>
+          <button
+            disabled={!videoEnabled}
+            inert={!videoEnabled}
+            onClick={() => {
+              setActiveState((prev) => (!prev || prev !== 'camera' ? 'camera' : ''))
+              // handleToggleMenuResolution()
+              // onClick?.()
+            }}
+            className={cn(
+              'dark:hover:bg-primary/50 relative inline-flex size-8 items-center justify-center rounded-full transition-transform duration-200 hover:bg-red-300 md:size-10',
+              isCameraActive ? 'rotate-180' : '',
+              !videoEnabled ? 'cursor-not-allowed opacity-40' : ''
+            )}
+          >
+            <HugeIcon icon={ChevronUp} strokeWidth={2} />
+          </button>
+        </CameraControl>
       </div>
-      <ButtonIcon isActive={shareScreenEnabled} onClick={handleToggleShareScreen}>
+      <ButtonIcon isActive={!shareScreenEnabled} onClick={handleToggleShareScreen}>
         <MonitorPlayIcon weight='fill' size={22} />
       </ButtonIcon>
-      <ButtonIcon isActive>
-        <SmileyIcon weight='fill' size={24} />
-      </ButtonIcon>
+      {/* <ReactionIcon isOpen={isReactionActive} /> */}
       <HandRaisedIcon />
       {children}
-      <ButtonIcon onClick={() => router.replace('/')}>
+      <ButtonIcon
+        onClick={() => room.disconnect()}
+        className='text-error bg-red-200 hover:bg-red-200!'
+      >
         <PhoneSlashIcon weight='fill' size={20} />
       </ButtonIcon>
     </div>
