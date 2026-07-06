@@ -1,20 +1,28 @@
 'use client'
 
-import type { FC, ReactNode } from 'react'
-import { useRef } from 'react'
+import type { FC } from 'react'
+import { useEffect, useEffectEvent, useRef } from 'react'
 import { CheckIcon } from '@phosphor-icons/react'
+import { CameraIcon, CameraDisabledIcon } from '@livekit/components-react'
+import { cn } from '@/lib/utils'
 import { useCameraQuality } from '@/hooks'
 import { CameraResolutionOptions } from '@/feat/const'
+import { ToggleTrack } from '@/components/ToggleTrack'
+import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 
 export interface CameraControlProps {
   isActive: boolean
-  isVideoEnabled?: boolean
-  children?: ReactNode
+  onClick?: () => void
+  onToggle?: (isCameraEnabled: boolean) => void
 }
 
-export const CameraControl: FC<CameraControlProps> = ({ isActive, children }) => {
+export const CameraControl: FC<CameraControlProps> = ({ isActive, onClick, onToggle }) => {
+  const { isCameraEnabled, resolution, maxResolution, changeResolution, toggleCamera } =
+    useCameraQuality()
   const popoverRef = useRef<HTMLDivElement>(null)
-  const { selectedQuality, maxCapabilities, changeResolution } = useCameraQuality()
+  const onToggleEvent = useEffectEvent((enable: boolean) => onToggle?.(enable))
+
+  useEffect(() => onToggleEvent(isCameraEnabled), [isCameraEnabled])
 
   return (
     <div className='relative inline-block' ref={popoverRef}>
@@ -26,7 +34,7 @@ export const CameraControl: FC<CameraControlProps> = ({ isActive, children }) =>
           <div className='mt-1 space-y-0.5'>
             {CameraResolutionOptions.map((option) => ({
               ...option,
-              disabled: option.value > maxCapabilities.height,
+              disabled: option.value > maxResolution,
             })).map(({ disabled, ...option }) => (
               <button
                 key={option.value}
@@ -37,7 +45,7 @@ export const CameraControl: FC<CameraControlProps> = ({ isActive, children }) =>
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                   disabled
                     ? 'cursor-not-allowed text-gray-400 opacity-40 dark:text-zinc-600'
-                    : selectedQuality === option.value
+                    : resolution.height === option.value
                       ? 'bg-gray-100 font-medium text-gray-900 dark:bg-zinc-800 dark:text-white'
                       : 'text-gray-700 hover:bg-gray-50 dark:text-zinc-300 dark:hover:bg-zinc-800/50'
                 }`}
@@ -48,7 +56,7 @@ export const CameraControl: FC<CameraControlProps> = ({ isActive, children }) =>
                     <span className='text-[10px] font-normal text-red-500'>(Tidak didukung)</span>
                   )}
                 </span>
-                {selectedQuality === option.value && !disabled && (
+                {resolution.height === option.value && !disabled && (
                   <CheckIcon className='size-4 text-gray-900 dark:text-white' weight='bold' />
                 )}
               </button>
@@ -58,7 +66,26 @@ export const CameraControl: FC<CameraControlProps> = ({ isActive, children }) =>
       )}
 
       <div className='dark:bg-primary/50 flex items-center gap-1 rounded-full bg-red-200 p-1'>
-        {children}
+        <ToggleTrack
+          title={isCameraEnabled ? 'Tutup kamera' : 'Aktifkan kamera'}
+          isActive={isCameraEnabled}
+          onClick={() => toggleCamera()}
+          className='size-8 md:size-10'
+        >
+          {isCameraEnabled ? <CameraIcon /> : <CameraDisabledIcon />}
+        </ToggleTrack>
+        <button
+          disabled={!isCameraEnabled}
+          inert={!isCameraEnabled}
+          onClick={onClick}
+          className={cn(
+            'dark:hover:bg-primary/50 relative inline-flex size-8 items-center justify-center rounded-full transition-transform duration-200 hover:bg-red-300 md:size-10',
+            isActive ? 'rotate-180' : '',
+            !isCameraEnabled ? 'cursor-not-allowed opacity-40' : ''
+          )}
+        >
+          <HugeIcon icon={ChevronUp} strokeWidth={2} />
+        </button>
       </div>
     </div>
   )

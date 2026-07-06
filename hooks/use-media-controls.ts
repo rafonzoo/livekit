@@ -229,5 +229,7 @@ export function useMediaControls(options?: MediaControlsOption) {
     handleToggleAudio,
     handleToggleVideo,
     handleToggleShareScreen,
+    saveAudioInputEnabled,
+    saveVideoInputEnabled,
   }
 }

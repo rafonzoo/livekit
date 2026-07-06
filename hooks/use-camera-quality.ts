@@ -1,115 +1,84 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import type { CameraResolution } from '@/feat/enum'
+import { useEffect, useRef, useState } from 'react'
 import { Track, VideoPresets } from 'livekit-client'
 import { useLocalParticipant, useTracks } from '@livekit/components-react'
-import { CameraResolution } from '@/feat/enum'
 
 export const useCameraQuality = () => {
   const { localParticipant } = useLocalParticipant()
-  const [selectedQuality, setSelectedQuality] = useState<CameraResolution>(CameraResolution.LOW)
-  const [maxCapabilities, setMaxCapabilities] = useState({ width: Infinity, height: Infinity })
+  const [resolution, setResolution] = useState(VideoPresets.h720.resolution)
+  const [maxResolution, setMaxResolution] = useState<number>(Infinity)
+  const pendingResolutionRef = useRef(VideoPresets.h720.resolution)
   const tracks = useTracks([Track.Source.Camera])
   const videoTrack = tracks.find((t) => t.participant.identity === localParticipant.identity)
   const track = videoTrack?.publication.track?.mediaStreamTrack
-  const activeSettings = track?.getSettings()
-
-  useEffect(() => {
-    if (track) {
-      const capabilities = track.getCapabilities()
-      const settings = track.getSettings()
-      const constraint = track.getConstraints()
-
-      console.log(capabilities)
-
-      // console.log({
-      //   width: [capabilities.width?.max ?? 0, settings.width ?? 0, constraint.width as number],
-      //   height: [capabilities.height?.max ?? 0, settings.height ?? 0, constraint.height as number],
-      // })
-
-      // No need to reset, let livekit does
-      setMaxCapabilities({
-        width: Math.max(
-          capabilities.width?.max ?? 0,
-          settings.width ?? 0,
-          constraint.width as number
-        ),
-        height: Math.max(
-          capabilities.height?.max ?? 0,
-          settings.height ?? 0,
-          constraint.height as number
-        ),
-      })
-    }
-  }, [track])
-
-  console.log(maxCapabilities)
-
-  useEffect(() => {
-    // console.log(activeSettings?.height)
-
-    if (!activeSettings?.width || !activeSettings.height) {
-      return
-    }
-    console.log(`Resolusi berhasil diubah ke: ${activeSettings?.width}x${activeSettings?.height}`)
-    setSelectedQuality(activeSettings.height)
-  }, [activeSettings])
-
-  // "handleToggleMenuResolution" should listen video track in effect
 
   const changeResolution = async (quality: CameraResolution) => {
     const localTrack = localParticipant?.getTrackPublication(Track.Source.Camera)?.videoTrack
-    const targetPreset = { value: VideoPresets.h360 }
+    const preset = VideoPresets[`h${quality}` as keyof typeof VideoPresets]
 
-    if (!track || !localTrack) {
-      return
-    }
+    if (!preset) return
 
-    switch (quality) {
-      case CameraResolution.LOW:
-        targetPreset.value = VideoPresets.h360
-        break
-      case CameraResolution.STANDART:
-        targetPreset.value = VideoPresets.h540
-        break
-      case CameraResolution.HIGH:
-        targetPreset.value = VideoPresets.h720
-        break
-      case CameraResolution.FULLHD:
-        targetPreset.value = VideoPresets.h1080
-        break
-      case CameraResolution.QHD:
-        targetPreset.value = VideoPresets.h1440
-        break
-      case CameraResolution.UHD:
-        targetPreset.value = VideoPresets.h2160
-        break
-      default:
-        break
-    }
+    pendingResolutionRef.current = preset.resolution
+
+    if (!localTrack) return
 
     try {
-      const { value } = targetPreset
-
-      await localParticipant.setCameraEnabled(false)
-      await localParticipant.unpublishTrack(track)
-
-      await localParticipant.setCameraEnabled(true, {
-        resolution: value.resolution,
-      })
-
-      await localTrack?.restartTrack({
-        resolution: value.resolution,
-      })
+      await localTrack.restartTrack({ resolution: preset.resolution })
+      setResolution(preset.resolution)
     } catch (error) {
       console.error('Gagal mengubah resolusi kamera:', error)
     }
   }
 
+  // Gunakan ini untuk toggle camera — bukan setCameraEnabled langsung
+  const toggleCamera = async () => {
+    if (!localParticipant.isCameraEnabled) {
+      // Pass resolution saat enable — browser acquire langsung dengan constraint yang benar
+      await localParticipant.setCameraEnabled(true, {
+        resolution: pendingResolutionRef.current,
+      })
+    } else {
+      await localParticipant.setCameraEnabled(false)
+    }
+  }
+
+  // Deteksi max capability
+  useEffect(() => {
+    if (!track) return
+    const max = Math.max(
+      track.getCapabilities().height?.max ?? -1,
+      track.getSettings().height ?? -1
+    )
+
+    console.log(max)
+    if (max > 0) setMaxResolution(max)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.id])
+
+  // Sync state resolusi saat track baru muncul
+  useEffect(() => {
+    if (!track) return
+    const currentHeight = track.getSettings().height
+    if (currentHeight) {
+      // Update state sesuai realita track, bukan force restart lagi
+      setResolution((prev) => ({
+        ...prev,
+        height: currentHeight,
+        width: track.getSettings().width ?? prev.width,
+      }))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.id])
+
+  console.log(resolution)
+
   return {
-    selectedQuality,
-    maxCapabilities,
+    resolution,
+    maxResolution,
     changeResolution,
-    setMaxCapabilities,
+    isCameraEnabled: localParticipant.isCameraEnabled,
+    toggleCamera, // <-- pakai ini di komponen, bukan setCameraEnabled
   }
 }

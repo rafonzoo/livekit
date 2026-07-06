@@ -9,14 +9,9 @@ import {
   MicIcon,
   useRoomContext,
   useConnectionState,
-  CameraIcon,
-  CameraDisabledIcon,
 } from '@livekit/components-react'
-import { cn } from '@/lib/utils'
 import { useMediaControls } from '@/hooks'
 import { ToggleTrack } from '@/components/ToggleTrack'
-// import { ReactionIcon } from '@/components/ReactionIcon'
-import { HugeIcon, ChevronUp } from '@/components/HugeIcon'
 import { HandRaisedIcon } from '@/components/HandRaised'
 import { CameraControl } from '@/components/CameraControl'
 import { ButtonIcon } from '@/components/Button'
@@ -28,13 +23,12 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
     videoEnabled,
     shareScreenEnabled,
     handleToggleAudio,
-    handleToggleVideo,
     handleToggleShareScreen,
+    saveVideoInputEnabled,
   } = useMediaControls({ room })
   const state = useConnectionState(room)
   const [activeState, setActiveState] = useState<'camera' | 'reaction' | ''>('')
   const isCameraActive = activeState === 'camera'
-  const isReactionActive = activeState === 'reaction'
 
   useEffect(() => {
     if (!videoEnabled) {
@@ -59,34 +53,15 @@ export const RoomControl: FC<{ children?: ReactNode }> = ({ children }) => {
       <div className='dark:bg-primary/50 flex items-center gap-1 rounded-full bg-red-200 p-1'>
         <CameraControl
           isActive={isCameraActive}
-          isVideoEnabled={videoEnabled}
-          // onClick={() => setActiveState((prev) => (!prev || prev !== 'camera' ? 'camera' : ''))}
-        >
-          <ToggleTrack
-            title={videoEnabled ? 'Tutup kamera' : 'Aktifkan kamera'}
-            isActive={videoEnabled}
-            onClick={handleToggleVideo}
-            className='size-8 md:size-10'
-          >
-            {videoEnabled ? <CameraIcon /> : <CameraDisabledIcon />}
-          </ToggleTrack>
-          <button
-            disabled={!videoEnabled}
-            inert={!videoEnabled}
-            onClick={() => {
-              setActiveState((prev) => (!prev || prev !== 'camera' ? 'camera' : ''))
-              // handleToggleMenuResolution()
-              // onClick?.()
-            }}
-            className={cn(
-              'dark:hover:bg-primary/50 relative inline-flex size-8 items-center justify-center rounded-full transition-transform duration-200 hover:bg-red-300 md:size-10',
-              isCameraActive ? 'rotate-180' : '',
-              !videoEnabled ? 'cursor-not-allowed opacity-40' : ''
-            )}
-          >
-            <HugeIcon icon={ChevronUp} strokeWidth={2} />
-          </button>
-        </CameraControl>
+          onClick={() => setActiveState((prev) => (!prev || prev !== 'camera' ? 'camera' : ''))}
+          onToggle={(enable) => {
+            saveVideoInputEnabled(enable)
+
+            if (!enable) {
+              setActiveState('')
+            }
+          }}
+        />
       </div>
       <ButtonIcon isActive={!shareScreenEnabled} onClick={handleToggleShareScreen}>
         <MonitorPlayIcon weight='fill' size={22} />

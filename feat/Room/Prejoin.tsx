@@ -162,7 +162,7 @@ export const PreJoin: FC<PreJoinProps> = (props) => {
                 <ToggleTrack
                   title={videoEnabled ? 'Tutup kamera' : 'Aktifkan kamera'}
                   isActive={videoEnabled}
-                  onClick={handleToggleVideo}
+                  onClick={() => handleToggleVideo()}
                   wrapperProps={{ className: cn('p-1') }}
                 >
                   {videoEnabled ? <CameraIcon /> : <CameraDisabledIcon />}
