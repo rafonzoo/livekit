@@ -12,12 +12,9 @@ export interface CameraControlProps {
   children?: ReactNode
 }
 
-export const CameraControl: FC<CameraControlProps> = ({ isVideoEnabled, isActive, children }) => {
+export const CameraControl: FC<CameraControlProps> = ({ isActive, children }) => {
   const popoverRef = useRef<HTMLDivElement>(null)
-  const { selectedQuality, changeResolution, isOptionDisabled } = useCameraQuality({
-    isVideoEnabled,
-    isOpen: isActive,
-  })
+  const { selectedQuality, maxCapabilities, changeResolution } = useCameraQuality()
 
   return (
     <div className='relative inline-block' ref={popoverRef}>
@@ -29,13 +26,13 @@ export const CameraControl: FC<CameraControlProps> = ({ isVideoEnabled, isActive
           <div className='mt-1 space-y-0.5'>
             {CameraResolutionOptions.map((option) => ({
               ...option,
-              disabled: isOptionDisabled(option.value),
+              disabled: option.value > maxCapabilities.height,
             })).map(({ disabled, ...option }) => (
               <button
                 key={option.value}
                 disabled={disabled}
                 onClick={() => {
-                  if (!disabled) changeResolution(option.value, option)
+                  if (!disabled) changeResolution(option.value)
                 }}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                   disabled
